@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+/* Tailwind 4 defaults `dark:` to the OS media query. We drive it from a class
+   on <html> instead, because the suite rule is that an app opens LIGHT and only
+   goes dark when the user says so — see stores/themeStore.ts. With the media
+   default, a laptop set to dark would override that on first paint. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+#root {
+  min-height: 100%;
+}
+
+body {
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* The pairing code is read aloud and typed by hand, so it gets tabular figures
+   and generous tracking — the two things that stop 8 and B being a guess. */
+.code-display {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.22em;
+}
+
+/* A slow pulse on the "waiting for the other device" dot. Deliberately calm:
+   this state can legitimately last minutes while someone walks to another room,
+   so it must not read as urgent. */
+@keyframes beam-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.35; }
+}
+.beam-pulse { animation: beam-pulse 2s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .beam-pulse { animation: none; }
+  * { transition-duration: 0.01ms !important; }
+}

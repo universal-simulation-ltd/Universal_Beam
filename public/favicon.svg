@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="8" fill="#0f172a"/>
+  <!-- Bar chart — three bars rising, brand-orange. -->
+  <rect x="7"  y="17" width="4.5" height="8"  rx="1" fill="#ff9a1f"/>
+  <rect x="13.75" y="12" width="4.5" height="13" rx="1" fill="#fe8c01"/>
+  <rect x="20.5" y="8"  width="4.5" height="17" rx="1" fill="#e05504"/>
+  <path d="M6 25h20" stroke="#475569" stroke-width="1.6" stroke-linecap="round"/>
+</svg>

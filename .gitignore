@@ -1,0 +1,23 @@
+node_modules
+dist
+dist-ssr
+dev-dist
+*.local
+.vite
+.DS_Store
+*.log
+
+# TypeScript incremental build artifacts
+*.tsbuildinfo
+
+# Playwright — traces, screenshots and the HTML report from `npm run test:e2e`
+playwright-report
+test-results
+blob-report
+.playwright
+
+# Per-user Claude Code settings
+.claude/settings.local.json
+
+# Internal project notes — not published (matches the other Universal Apps repos)
+CLAUDE.md

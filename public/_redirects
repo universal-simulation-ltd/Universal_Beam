@@ -1,0 +1,30 @@
+# Cloudflare Pages rewrites — Universal Beam is served under /beam/ but the
+# built files in dist/ are flat (Vite's `base` only rewrites URLs INSIDE the
+# HTML; it does not place files in dist/beam/).
+#
+# 200 status = transparent rewrite (URL bar unchanged). Specific rules first,
+# broad SPA fallback last.
+
+# Service-worker + PWA artefacts.
+/beam/sw.js                /sw.js                200
+/beam/registerSW.js        /registerSW.js        200
+/beam/manifest.webmanifest /manifest.webmanifest 200
+/beam/workbox-*            /workbox-:splat       200
+
+# Hashed asset bundles.
+/beam/assets/*             /assets/:splat        200
+
+# Static files referenced from index.html / app code (BASE_URL-prefixed).
+/beam/favicon.svg          /favicon.svg          200
+/beam/unisim-icon.png      /unisim-icon.png      200
+/beam/og-image.png         /og-image.png         200
+
+# SEO crawler files.
+/beam/robots.txt           /robots.txt           200
+/beam/sitemap.xml          /sitemap.xml          200
+
+# SPA fallback — everything else under /beam/ serves the shell.
+# (The pairing deep-link is a QUERY string, /beam/?c=<CODE>, not a path, so it
+# doesn't depend on this rule — but keep the fallback so a stray path still
+# lands on the app rather than a 404.)
+/beam/*                    /index.html           200

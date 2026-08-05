@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://opensource.unisim.co.uk/beam/sitemap.xml

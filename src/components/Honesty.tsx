@@ -1,0 +1,79 @@
+// The limitations, on the page rather than buried.
+//
+// Every claim here is scoped to the leg the user is actually on — the standing
+// suite rule. Three sentences are deliberately absent, and must stay absent:
+//
+//   "Never leaves your network"  — false the moment the two devices are on
+//                                  different networks, which is supported.
+//   "No servers involved"        — a rendezvous server is always involved.
+//   "Works offline"              — pairing needs the internet, always, even on
+//                                  one Wi-Fi. This is the product's real limit.
+//
+// The LocalSend pointer is not modesty. If someone needs two laptops in a field
+// with no internet, this app cannot do it and LocalSend can; sending them there
+// costs nothing and is what makes the rest of the claims on this page credible.
+
+const ITEMS: { title: string; body: string }[] = [
+  {
+    title: 'Your text goes device to device',
+    body:
+      'Once the two tabs are connected they talk directly. The text is encrypted end to end by the browser itself, and no server of ours ever holds it — there is nothing to leak, subpoena or delete later.',
+  },
+  {
+    title: 'A server does help you pair — and only pair',
+    body:
+      'Two browsers cannot find each other unaided, so both dial out to a small rendezvous service that matches them by code and passes the connection details. It never sees your text, and Beam hangs up on it seconds after the direct link opens.',
+  },
+  {
+    title: 'Both devices need the internet, even on the same Wi-Fi',
+    body:
+      'This is the honest limitation. A web page cannot browse your local network — no browser can, by design — so pairing always goes out to the internet and back. If you need transfers with no internet at all, use LocalSend: it is free, open source, and better at that than we can be in a tab.',
+  },
+  {
+    title: 'Some networks will not allow a direct connection',
+    body:
+      'Beam is direct-or-fail. Where a router, carrier or corporate firewall blocks peer-to-peer traffic, Beam tells you so in plain words instead of spinning — it will not quietly bounce your text through a relay to hide the problem. Putting both devices on the same Wi-Fi fixes it nearly every time.',
+  },
+  {
+    title: 'Nothing is remembered',
+    body:
+      'No account, no history, no sync, no "send to a device that is switched off". What is on screen lives in these two tabs; closing one is the delete button. Reopening Beam starts an empty session with a new code.',
+  },
+  {
+    title: 'It cannot mirror your clipboard',
+    body:
+      'A web page has no way to watch your clipboard in the background, so Beam will never claim to sync it. Sending is always something you press. That is a browser limit, not a feature we skipped.',
+  },
+]
+
+export default function Honesty() {
+  return (
+    <section className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
+      <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+        What Beam does, and what it cannot do
+      </h2>
+      <dl className="mt-4 grid gap-x-8 gap-y-5 sm:grid-cols-2">
+        {ITEMS.map((item) => (
+          <div key={item.title}>
+            <dt className="text-sm font-medium text-slate-900 dark:text-slate-100">{item.title}</dt>
+            <dd className="mt-1 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+              {item.body}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      <p className="mt-5 text-xs text-slate-500 dark:text-slate-400">
+        Need transfers with no internet at all?{' '}
+        <a
+          href="https://localsend.org"
+          target="_blank"
+          rel="noreferrer noopener"
+          className="font-medium text-slate-700 underline underline-offset-2 hover:text-orange-600 dark:text-slate-300"
+        >
+          LocalSend
+        </a>{' '}
+        is the right tool, and it is free.
+      </p>
+    </section>
+  )
+}
