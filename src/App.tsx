@@ -7,7 +7,6 @@ import PairCard from './components/PairCard'
 import Room from './components/Room'
 import FailureCard from './components/FailureCard'
 import Honesty from './components/Honesty'
-import { BEAM_CATALOGUE } from './lib/catalogue'
 import { initFromUrl, useBeamStore } from './stores/beamStore'
 
 const REPO_URL = 'https://github.com/universal-simulation-ltd/Universal_Beam'
@@ -30,7 +29,6 @@ export default function App() {
     <div className="flex min-h-screen flex-col bg-slate-100 dark:bg-slate-950">
       <UniversalAppsNavBar
         product="beam"
-        products={BEAM_CATALOGUE}
         productLogo={<ProductLogo />}
         productHomeHref={import.meta.env.BASE_URL}
         actions={<AppMenu />}
