@@ -1,5 +1,18 @@
 # Universal Beam — handover
 
+> **Update 2026-08-10 — the pairing QR is now UNI·SIM branded, and its scan is
+> mechanised.** `BrandedQr.tsx` renders the same arrangement Universal QR ships
+> as its default (rounded #1c1917 modules, #e05504 finder eyes, EC 'H', the
+> mark in the centre — mirrored from `Universal_QR/src/lib/qr.ts`
+> DEFAULT_CONFIG, where every one of those choices was measured, not styled).
+> `qrcode.react` is gone; `qr-code-styling` renders it as SVG. The centre image
+> is the `public/unisim-icon.png` the navbar already loads — no inlined data
+> URI. ⚠️ Branding is exactly how a QR stops scanning (Universal QR's first
+> branded default was unscannable by its own scan tab), so `e2e/qr.e2e.ts`
+> screenshots the real rendered pixels at the real 160 px size and decodes them
+> with strict zxing, on first paint and again after "Start a new code". Restyle
+> nothing without keeping that spec green.
+
 > **Update 2026-08-10 — v2 (files) is built and shipped.** §4.8 below is done:
 > chunked transfer over the same channel with real backpressure, stream-to-disk
 > on Chrome/Edge, memory + download elsewhere with the ceiling stated on the

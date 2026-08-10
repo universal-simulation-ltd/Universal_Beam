@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
-import { QRCodeSVG } from 'qrcode.react'
 import { joinUrl, useBeamStore } from '../stores/beamStore'
 import { WAITING_NUDGE_MS } from '../lib/rtc'
 import { isValidCode, normaliseCode } from '../lib/code'
 import { writeClipboard } from '../lib/clipboard'
+import BrandedQr from './BrandedQr'
 import StatusPill from './StatusPill'
 
 // The pairing half of the app: this device's code and QR on the left, "I have a
@@ -48,7 +48,7 @@ export default function PairCard() {
         {link && (
           <div className="mt-5 flex flex-col items-center gap-4">
             <div className="rounded-xl bg-white p-3 ring-1 ring-slate-200 dark:ring-slate-700">
-              <QRCodeSVG value={link} size={148} level="M" marginSize={0} />
+              <BrandedQr value={link} />
             </div>
             <CopyButton
               text={link}
