@@ -1,7 +1,17 @@
 # Universal Beam — handover
 
+> **Update 2026-08-10 — v2 (files) is built and shipped.** §4.8 below is done:
+> chunked transfer over the same channel with real backpressure, stream-to-disk
+> on Chrome/Edge, memory + download elsewhere with the ceiling stated on the
+> offer row, accept/decline/cancel from either end, and the §13.3 SAS safety
+> number (which §4 flagged as "before the file leg ships"). Proven by e2e: 8 MB
+> of random bytes crossed two real browser contexts hash-identical. Protocol
+> details: the header comment of `src/lib/files.ts`. The cross-network and
+> Firefox/Safari caveats in §1 still stand — now for files too.
+
 **State: v1 (text) is built, compiles, lints, and has been proven working
 browser-to-browser. Not deployed. No GitHub remote. Local commits only.**
+*(Superseded — deployed 2026-08-06, and v2 files shipped 2026-08-10; see above.)*
 
 Written 2026-08-05, at the end of the session that finished the app a previous
 session had drafted but never run.

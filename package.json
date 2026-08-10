@@ -1,10 +1,10 @@
 {
   "name": "universal-beam",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "license": "MIT",
-  "description": "Universal Beam — send text straight from one device to another. Peer-to-peer, end-to-end encrypted, never stored on a server.",
+  "description": "Universal Beam — send text and files straight from one device to another. Peer-to-peer, end-to-end encrypted, never stored on a server.",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

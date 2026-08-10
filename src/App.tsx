@@ -41,12 +41,12 @@ export default function App() {
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
         <header className="mb-8">
           <h1 className="text-2xl font-semibold text-slate-900 sm:text-3xl dark:text-slate-100">
-            Send text straight between your devices
+            Send text and files straight between your devices
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-            Pair two browsers with a short code, then type or paste — notes,
-            links, anything. It goes device to device, encrypted end to end, and
-            no server of ours ever holds a word of it.
+            Pair two browsers with a short code, then type, paste or drop a file
+            — notes, links, photos, anything. It goes device to device,
+            encrypted end to end, and no server of ours ever holds a byte of it.
           </p>
         </header>
 
@@ -66,7 +66,7 @@ export default function App() {
         <div className="mx-auto flex w-full max-w-5xl flex-row items-center gap-3 px-4 py-4 text-xs text-slate-500 sm:gap-4 sm:px-6 lg:px-8 dark:text-slate-400">
           <span>
             100% free — every feature, no paywalls. We pass a connection code,
-            never your text. Hosted by{' '}
+            never your text or files. Hosted by{' '}
             <a
               href="https://www.unisim.co.uk"
               target="_blank"

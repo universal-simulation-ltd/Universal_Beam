@@ -1,6 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type DragEvent } from 'react'
 import { useBeamStore } from '../stores/beamStore'
 import { asSingleLink, canReadClipboard, readClipboard, writeClipboard } from '../lib/clipboard'
+import { formatBytes, type BeamTransfer } from '../lib/files'
+import { MEMORY_WARN_BYTES, supportsStreamingSave } from '../lib/fileSink'
 import StatusPill from './StatusPill'
 
 // The connected view. Everything on this screen lives in memory in these two
@@ -8,24 +10,55 @@ import StatusPill from './StatusPill'
 // so closing the tab really is the delete button. The copy says so, because a
 // user who assumes otherwise will be unpleasantly surprised later rather than
 // now.
+//
+// Text and files share one timeline, ordered by when they happened — a file is
+// something that was sent, not a different app bolted on the side.
+
+type TimelineItem =
+  | { kind: 'msg'; key: string; at: number; body: string; dir: 'in' | 'out' }
+  | { kind: 'file'; key: string; at: number; t: BeamTransfer }
 
 export default function Room() {
   const messages = useBeamStore((s) => s.messages)
+  const transfers = useBeamStore((s) => s.transfers)
   const route = useBeamStore((s) => s.route)
   const phase = useBeamStore((s) => s.phase)
+  const sas = useBeamStore((s) => s.sas)
   const send = useBeamStore((s) => s.send)
+  const sendFiles = useBeamStore((s) => s.sendFiles)
   const disconnect = useBeamStore((s) => s.disconnect)
 
   const live = phase === 'connected'
   const listEnd = useRef<HTMLDivElement>(null)
+  const [dragging, setDragging] = useState(false)
+
+  const timeline: TimelineItem[] = [
+    ...messages.map((m): TimelineItem => ({ kind: 'msg', key: `m-${m.id}`, at: m.at, body: m.body, dir: m.dir })),
+    ...Object.values(transfers).map((t): TimelineItem => ({ kind: 'file', key: `f-${t.id}`, at: t.at, t })),
+  ].sort((a, b) => a.at - b.at)
 
   useEffect(() => {
     listEnd.current?.scrollIntoView({ block: 'end', behavior: 'smooth' })
-  }, [messages.length])
+  }, [timeline.length])
+
+  function onDrop(e: DragEvent) {
+    e.preventDefault()
+    setDragging(false)
+    if (live && e.dataTransfer.files.length) sendFiles(e.dataTransfer.files)
+  }
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
+      <section
+        onDragOver={(e) => { e.preventDefault(); if (live) setDragging(true) }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={onDrop}
+        className={`rounded-2xl border bg-white p-6 transition dark:bg-slate-900 ${
+          dragging
+            ? 'border-orange-400 ring-2 ring-orange-200 dark:ring-orange-900'
+            : 'border-slate-200 dark:border-slate-700'
+        }`}
+      >
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
@@ -37,11 +70,21 @@ export default function Room() {
                   ? 'Connected peer-to-peer.'
                   : 'The other device disconnected. Anything below stays on screen until you close the tab.')}
             </p>
+            {live && sas && (
+              <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                Safety check: both devices should show{' '}
+                <strong data-testid="sas" className="code-display font-semibold text-slate-700 dark:text-slate-200">
+                  {sas}
+                </strong>
+                {' '}— if they differ, something is sitting between you. Worth a
+                glance before sending anything sensitive.
+              </p>
+            )}
           </div>
           <StatusPill />
         </div>
 
-        <Composer disabled={!live} onSend={send} />
+        <Composer disabled={!live} onSend={send} onSendFiles={sendFiles} />
       </section>
 
       <section
@@ -56,16 +99,20 @@ export default function Room() {
           </span>
         </div>
 
-        {messages.length === 0 ? (
+        {timeline.length === 0 ? (
           <p className="mt-4 rounded-lg bg-slate-50 px-4 py-6 text-center text-sm text-slate-500 dark:bg-slate-800 dark:text-slate-400">
-            Nothing sent yet. Type or paste above, and it appears on the other
-            device straight away.
+            Nothing sent yet. Type or paste above — or send a file — and it
+            appears on the other device straight away.
           </p>
         ) : (
           <ul className="mt-4 max-h-[26rem] space-y-3 overflow-y-auto pr-1">
-            {messages.map((m) => (
-              <MessageRow key={m.id} body={m.body} dir={m.dir} at={m.at} />
-            ))}
+            {timeline.map((item) =>
+              item.kind === 'msg' ? (
+                <MessageRow key={item.key} body={item.body} dir={item.dir} at={item.at} />
+              ) : (
+                <TransferRow key={item.key} t={item.t} />
+              ),
+            )}
             <div ref={listEnd} />
           </ul>
         )}
@@ -85,10 +132,19 @@ export default function Room() {
   )
 }
 
-function Composer({ disabled, onSend }: { disabled: boolean; onSend: (body: string) => boolean }) {
+function Composer({
+  disabled,
+  onSend,
+  onSendFiles,
+}: {
+  disabled: boolean
+  onSend: (body: string) => boolean
+  onSendFiles: (files: Iterable<File>) => void
+}) {
   const [draft, setDraft] = useState('')
   const [pasteHint, setPasteHint] = useState(false)
   const ref = useRef<HTMLTextAreaElement>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   function submit() {
     if (disabled) return
@@ -139,6 +195,26 @@ function Composer({ disabled, onSend }: { disabled: boolean; onSend: (body: stri
         >
           Send
         </button>
+        <input
+          ref={fileRef}
+          type="file"
+          multiple
+          className="hidden"
+          data-testid="file-input"
+          onChange={(e) => {
+            if (e.target.files?.length) onSendFiles(e.target.files)
+            e.target.value = ''
+          }}
+        />
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          disabled={disabled}
+          data-testid="send-file"
+          className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+        >
+          Send a file
+        </button>
         {canReadClipboard() && (
           <button
             type="button"
@@ -151,7 +227,7 @@ function Composer({ disabled, onSend }: { disabled: boolean; onSend: (body: stri
           </button>
         )}
         <span className="ml-auto text-xs text-slate-400 dark:text-slate-500">
-          Enter sends · Shift+Enter for a new line
+          Enter sends · Shift+Enter for a new line · drop a file anywhere here
         </span>
       </div>
 
@@ -211,6 +287,116 @@ function MessageRow({ body, dir, at }: { body: string; dir: 'in' | 'out'; at: nu
           >
             Open link
           </a>
+        )}
+      </div>
+    </li>
+  )
+}
+
+// One file transfer, whatever state it is in. The row IS the progress UI, the
+// accept prompt and the receipt, so a transfer never jumps around the screen
+// as it moves through its life.
+function TransferRow({ t }: { t: BeamTransfer }) {
+  const acceptTransfer = useBeamStore((s) => s.acceptTransfer)
+  const declineTransfer = useBeamStore((s) => s.declineTransfer)
+  const cancelTransfer = useBeamStore((s) => s.cancelTransfer)
+
+  const time = new Date(t.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  const pct = t.size > 0 ? Math.min(100, Math.round((t.bytes / t.size) * 100)) : 100
+  const incomingOffer = t.dir === 'in' && t.status === 'offered'
+  // The Firefox/Safari honesty: no streaming save means the whole file sits in
+  // memory until it is handed over as a download. Say so BEFORE the transfer.
+  const memoryWarning = incomingOffer && !supportsStreamingSave() && t.size >= MEMORY_WARN_BYTES
+
+  const statusLine: string =
+    t.status === 'queued' ? 'Waiting for the current transfer to finish'
+    : t.status === 'offered' ? (t.dir === 'out' ? 'Waiting for the other device to accept' : 'The other device wants to send you this file')
+    : t.status === 'active' ? `${formatBytes(t.bytes)} of ${formatBytes(t.size)}`
+    : t.status === 'done' ? (t.dir === 'out' ? 'Sent' : t.savedAs === 'disk' ? 'Saved where you chose' : 'Done — check your downloads')
+    : t.status === 'declined' ? (t.dir === 'out' ? 'The other device declined' : 'Declined')
+    : t.status === 'cancelled' ? 'Cancelled'
+    : t.error ?? 'Failed'
+
+  return (
+    <li
+      data-testid={t.dir === 'in' ? 'transfer-in' : 'transfer-out'}
+      data-status={t.status}
+      className={`rounded-xl border px-4 py-3 ${
+        t.dir === 'in'
+          ? 'border-emerald-200 bg-emerald-50/60 dark:border-emerald-900 dark:bg-emerald-950/40'
+          : 'border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60'
+      }`}
+    >
+      <div className="flex items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
+        <span className="font-medium">{t.dir === 'in' ? 'Incoming file' : 'Sending file'}</span>
+        <span>{time}</span>
+      </div>
+
+      <p className="mt-1.5 flex flex-wrap items-baseline gap-x-2 text-sm">
+        <span className="min-w-0 break-all font-medium text-slate-900 dark:text-slate-100">{t.name}</span>
+        <span className="text-xs text-slate-500 dark:text-slate-400">{formatBytes(t.size)}</span>
+      </p>
+
+      {t.status === 'active' && (
+        <div className="mt-2" data-testid="transfer-progress">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+            <div
+              className="h-full rounded-full bg-orange-500 transition-[width] duration-200"
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      <p
+        className={`mt-1.5 text-xs ${
+          t.status === 'failed'
+            ? 'text-rose-700 dark:text-rose-300'
+            : 'text-slate-600 dark:text-slate-400'
+        }`}
+      >
+        {statusLine}
+      </p>
+
+      {memoryWarning && (
+        <p className="mt-1.5 rounded-lg bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-800 dark:bg-amber-950 dark:text-amber-200">
+          This browser cannot stream a file to disk, so the whole{' '}
+          {formatBytes(t.size)} sits in memory until it lands in your downloads.
+          A file this size may fail partway — Chrome or Edge would save it
+          straight to disk instead.
+        </p>
+      )}
+
+      <div className="mt-2 flex flex-wrap gap-2">
+        {incomingOffer && (
+          <>
+            <button
+              type="button"
+              onClick={() => { void acceptTransfer(t.id) }}
+              data-testid="accept-file"
+              className="rounded-md bg-orange-600 px-3 py-1 text-xs font-semibold text-white transition hover:bg-orange-700"
+            >
+              {supportsStreamingSave() ? 'Save…' : 'Accept'}
+            </button>
+            <button
+              type="button"
+              onClick={() => declineTransfer(t.id)}
+              data-testid="decline-file"
+              className="rounded-md border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 transition hover:bg-white dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+            >
+              Decline
+            </button>
+          </>
+        )}
+        {(t.status === 'active' || t.status === 'queued' || (t.dir === 'out' && t.status === 'offered')) && (
+          <button
+            type="button"
+            onClick={() => cancelTransfer(t.id)}
+            data-testid="cancel-file"
+            className="rounded-md border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 transition hover:bg-white dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+          >
+            Cancel
+          </button>
         )}
       </div>
     </li>

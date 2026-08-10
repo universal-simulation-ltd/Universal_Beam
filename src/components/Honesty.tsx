@@ -15,14 +15,14 @@
 
 const ITEMS: { title: string; body: string }[] = [
   {
-    title: 'Your text goes device to device',
+    title: 'Your text and files go device to device',
     body:
-      'Once the two tabs are connected they talk directly. The text is encrypted end to end by the browser itself, and no server of ours ever holds it — there is nothing to leak, subpoena or delete later.',
+      'Once the two tabs are connected they talk directly. Everything you send is encrypted end to end by the browser itself, and no server of ours ever holds any of it — there is nothing to leak, subpoena or delete later.',
   },
   {
     title: 'A server does help you pair — and only pair',
     body:
-      'Two browsers cannot find each other unaided, so both dial out to a small rendezvous service that matches them by code and passes the connection details. It never sees your text, and Beam hangs up on it seconds after the direct link opens.',
+      'Two browsers cannot find each other unaided, so both dial out to a small rendezvous service that matches them by code and passes the connection details. It never sees what you send, and Beam hangs up on it seconds after the direct link opens.',
   },
   {
     title: 'Both devices need the internet, even on the same Wi-Fi',
@@ -32,7 +32,12 @@ const ITEMS: { title: string; body: string }[] = [
   {
     title: 'Some networks will not allow a direct connection',
     body:
-      'Beam is direct-or-fail. Where a router, carrier or corporate firewall blocks peer-to-peer traffic, Beam tells you so in plain words instead of spinning — it will not quietly bounce your text through a relay to hide the problem. Putting both devices on the same Wi-Fi fixes it nearly every time.',
+      'Beam is direct-or-fail. Where a router, carrier or corporate firewall blocks peer-to-peer traffic, Beam tells you so in plain words instead of spinning — it will not quietly bounce your data through a relay to hide the problem. Putting both devices on the same Wi-Fi fixes it nearly every time.',
+  },
+  {
+    title: 'How big a file can be depends on the receiving browser',
+    body:
+      'On Chrome and Edge the receiver picks where to save and the file streams straight to disk, so size barely matters. Safari and Firefox give a web page no way to do that: the whole file sits in memory until it lands in the downloads folder, so very large transfers can fail there. Beam warns on the offer itself when that risk is real.',
   },
   {
     title: 'Nothing is remembered',

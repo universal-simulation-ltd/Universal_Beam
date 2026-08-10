@@ -1,9 +1,9 @@
 # Universal Beam
 
-**Send text straight between your devices.** Pair two browsers with a short
-code, then type or paste — notes, links, snippets. It goes device to device over
-a WebRTC data channel, encrypted end to end by the browser, and **no server ever
-holds a word of it**.
+**Send text and files straight between your devices.** Pair two browsers with a
+short code, then type, paste or drop a file — notes, links, photos, anything. It
+goes device to device over a WebRTC data channel, encrypted end to end by the
+browser, and **no server ever holds a byte of it**.
 
 Part of the [UNI·SIM Universal Apps](https://opensource.unisim.co.uk) — free,
 open source, no account required. Served at
@@ -38,7 +38,8 @@ or a deliberate trade, and each has bitten someone who assumed otherwise.
 | **Mirrors your clipboard** | ❌ No, and it never will. `navigator.clipboard.readText()` does not exist in Firefox and is permission- plus gesture-gated elsewhere. Sending is always something you press. |
 | **Falls back to a relay when direct fails** | ❌ No — **direct-or-fail**. There is no paid TURN. Where a network blocks peer-to-peer, Beam says so in plain words with a reason and something to try (see `src/lib/diagnose.ts`). A silent spinner is the worst possible outcome for this product. |
 | **Remembers anything** | ❌ No account, no history, no sync, no "send to a device that's switched off". Closing the tab is the delete button. |
-| **Sends files** | Not yet — v1 is text. Files are v2, over the same channel. |
+| **Sends files of any size, in any browser** | ⚠️ Depends on the *receiving* browser. Chrome/Edge stream to disk as the bytes arrive (File System Access API), so size barely matters. Safari and Firefox have no streaming save: the whole file sits in memory until it becomes a download, and their practical ceiling is free RAM. The offer row warns when that risk is real (`MEMORY_WARN_BYTES`). |
+| **Resumes an interrupted transfer** | ❌ No. A dropped connection fails the transfer with a sentence; send it again. Resume is v3-that-will-probably-never-happen (next-products.md §13.4). |
 
 **Sentences that must never appear in this app's copy** (each is false on a leg
 the product actually supports): *"never leaves your network"*, *"no servers
@@ -83,11 +84,24 @@ the product does not work.
 | File | Job |
 |---|---|
 | `src/lib/rtc.ts` | `BeamSession` — joins the room, tie-breaks who offers, runs ICE, opens the data channel, hangs up on the rendezvous, diagnoses failure. |
+| `src/lib/files.ts` | `FileTransferEngine` — the file protocol over that channel: offer/accept, 64 KiB chunks, real backpressure (`bufferedamountlow`, never a sleep), queue, cancel from either end. DOM-free, so the whole protocol is unit-tested against a fake channel. |
+| `src/lib/fileSink.ts` | Where received bytes go: streamed to disk on Chrome/Edge, memory + a download elsewhere — and the honesty about the difference. |
+| `src/lib/sas.ts` | The safety number — derived from both DTLS fingerprints, same on both screens unless someone is in the middle. |
 | `src/lib/code.ts` | Mints the pairing code. **The code is the only authentication this product has** — 6 glyphs from a 32-glyph alphabet via `crypto.getRandomValues` (2³⁰ ≈ 1.07 billion), never `Math.random()`. |
 | `src/lib/diagnose.ts` | Turns collected ICE evidence into a sentence a person can act on. |
 | `src/lib/clipboard.ts` | Copy/paste, and the honest limits of both. |
 | `src/stores/beamStore.ts` | Zustand store; owns the one live `BeamSession`. |
-| `src/components/` | UI. `PairCard` (code + QR + join), `Room` (composer + session), `FailureCard`, `Honesty`. |
+| `src/components/` | UI. `PairCard` (code + QR + join), `Room` (composer + file drop + session timeline), `FailureCard`, `Honesty`. |
+
+### The file protocol, in one paragraph
+
+Control frames are JSON strings; file bytes are raw binary messages on the same
+ordered channel, so a chunk can only belong to the one transfer that is
+currently accepted — that single invariant is why chunks go unlabelled. Each
+side sends at most one file at a time (extra sends queue); both directions at
+once is fine. Files are **direct-or-fail like everything else**: no relay, no
+resume, a failure is a sentence. Nothing about a file ever touches the
+rendezvous — it is long gone by then.
 
 ### The pairing protocol
 
@@ -111,8 +125,13 @@ both devices, and two "guests" would otherwise wait for each other forever.
   not merely guess eventually.
 - **DTLS is mandatory-to-use in WebRTC.** The data channel is encrypted whether
   or not we do anything, with per-session keys.
-- Not done yet: a short verification string derived from both DTLS
-  fingerprints (the SAS pattern). Worth doing before the file leg ships.
+- **The safety number (SAS).** Once connected, both screens show a six-digit
+  number derived from the two DTLS certificate fingerprints (`src/lib/sas.ts`).
+  A rendezvous server playing man-in-the-middle has to run two DTLS sessions
+  with two different certificates, so the two screens cannot agree. Display-only
+  — a check a person *can* make before sending something sensitive, not a gate.
+  This is what makes "end-to-end encrypted" defensible against a malicious
+  signalling server rather than merely true in the happy path.
 
 ## Licence
 

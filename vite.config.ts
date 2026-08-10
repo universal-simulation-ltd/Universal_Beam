@@ -37,7 +37,7 @@ export default defineConfig(({ mode }) => {
         manifest: {
           name: 'Universal Beam',
           short_name: 'UniBeam',
-          description: 'Send text straight between your devices — peer-to-peer, never stored on a server',
+          description: 'Send text and files straight between your devices — peer-to-peer, never stored on a server',
           theme_color: '#0f172a',
           background_color: '#f8fafc',
           display: 'standalone',

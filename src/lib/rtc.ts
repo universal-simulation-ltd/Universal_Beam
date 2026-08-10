@@ -31,6 +31,8 @@
 //   honestly rather than letting it pass as direct.
 
 import { describeRoute, diagnose, type BeamFailure, type BeamRoute } from './diagnose'
+import { FileTransferEngine, isFileFrame, type BeamTransfer, type FileSink } from './files'
+import { deriveSas, extractFingerprint } from './sas'
 
 /** Where the rendezvous lives.
  *
@@ -84,6 +86,11 @@ export interface BeamCallbacks {
   /** True while the pairing WebSocket is open. Goes false — deliberately —
    *  a few seconds after the data channel opens. */
   onSignalling(open: boolean): void
+  /** Every state change of every file transfer, both directions. */
+  onTransfer(t: BeamTransfer): void
+  /** The six-digit safety number, once both DTLS fingerprints are known.
+   *  Null when a fingerprint could not be read — show nothing, never guess. */
+  onSas(sas: string | null): void
 }
 
 /** How long we let ICE run before declaring direct-or-fail. Real successful
@@ -134,6 +141,7 @@ export class BeamSession {
   private ws: WebSocket | null = null
   private pc: RTCPeerConnection | null = null
   private dc: RTCDataChannel | null = null
+  private files: FileTransferEngine | null = null
 
   private phase: BeamPhase = 'idle'
   private disposed = false
@@ -184,6 +192,28 @@ export class BeamSession {
     this.dc.send(JSON.stringify({ v: 1, t: 'text', id: msg.id, body, at: msg.at }))
     this.cb.onMessage(msg)
     return msg
+  }
+
+  // ── files (the engine owns the protocol; see files.ts) ───────────────────
+
+  /** Queue a file for the peer. Returns the transfer id, or null if there is
+   *  no open channel to send it over. */
+  sendFile(file: File): string | null {
+    return this.files?.send(file) ?? null
+  }
+
+  /** Accept an incoming offer. The sink comes from the caller because opening
+   *  a save dialog has to happen inside the user's click (fileSink.ts). */
+  acceptFile(id: string, sink: FileSink): void {
+    this.files?.accept(id, sink)
+  }
+
+  declineFile(id: string): void {
+    this.files?.decline(id)
+  }
+
+  cancelTransfer(id: string): void {
+    this.files?.cancel(id)
   }
 
   close(): void {
@@ -453,11 +483,16 @@ export class BeamSession {
 
   private wireDataChannel(channel: RTCDataChannel): void {
     this.dc = channel
+    // File chunks arrive as binary. Without this Chrome hands them over as
+    // Blobs, which adds an async read to every chunk for nothing.
+    channel.binaryType = 'arraybuffer'
+    this.files = new FileTransferEngine(channel, (t) => this.cb.onTransfer(t))
 
     channel.onopen = () => {
       this.clearTimers()
       this.setPhase('connected')
       void this.reportRoute()
+      void this.reportSas()
       // Hang up on the rendezvous. From here the two browsers talk directly and
       // the server has no part in the session — including no ability to see,
       // store or relay a single byte of it.
@@ -466,13 +501,24 @@ export class BeamSession {
 
     channel.onclose = () => {
       if (this.disposed) return
+      this.files?.abortAll('The connection closed before this finished.')
       if (this.phase === 'connected') this.setPhase('ended')
     }
 
     channel.onmessage = (e) => {
+      // Binary is file bytes; strings are control frames. The engine's ordered-
+      // channel invariant (files.ts) is what makes this dispatch sufficient.
+      if (typeof e.data !== 'string') {
+        this.files?.onChunk(e.data as ArrayBuffer)
+        return
+      }
       let m: unknown
-      try { m = JSON.parse(String(e.data)) } catch { return }
+      try { m = JSON.parse(e.data) } catch { return }
       const f = m as { t?: string; id?: string; body?: string; at?: number }
+      if (typeof f.t === 'string' && isFileFrame(f.t)) {
+        this.files?.onFrame(f as Parameters<FileTransferEngine['onFrame']>[0])
+        return
+      }
       if (f.t !== 'text' || typeof f.body !== 'string') return
       this.cb.onMessage({
         id: typeof f.id === 'string' ? f.id : crypto.randomUUID(),
@@ -480,6 +526,20 @@ export class BeamSession {
         dir: 'in',
         at: typeof f.at === 'number' ? f.at : Date.now(),
       })
+    }
+  }
+
+  /** Derive the safety number from the two DTLS fingerprints in the SDP —
+   *  see sas.ts for what it defends against and what it doesn't. */
+  private async reportSas(): Promise<void> {
+    const pc = this.pc
+    if (!pc) return
+    try {
+      const local = extractFingerprint(pc.currentLocalDescription?.sdp ?? pc.localDescription?.sdp)
+      const remote = extractFingerprint(pc.currentRemoteDescription?.sdp ?? pc.remoteDescription?.sdp)
+      this.cb.onSas(local && remote ? await deriveSas(local, remote) : null)
+    } catch {
+      this.cb.onSas(null)
     }
   }
 
@@ -536,6 +596,8 @@ export class BeamSession {
   }
 
   private teardownPeer(): void {
+    this.files?.abortAll('The connection closed before this finished.')
+    this.files = null
     if (this.dc) { try { this.dc.close() } catch { /* gone */ } this.dc = null }
     if (this.pc) { try { this.pc.close() } catch { /* gone */ } this.pc = null }
     this.remoteDescriptionSet = false

@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import { BeamSession, type BeamMessage, type BeamPhase, type BeamRole } from '../lib/rtc'
 import type { BeamFailure, BeamRoute } from '../lib/diagnose'
+import type { BeamTransfer } from '../lib/files'
+import { createDiskSink, createMemorySink, supportsStreamingSave } from '../lib/fileSink'
 import { isValidCode, mintCode, normaliseCode } from '../lib/code'
 
 // One session at a time, held outside the store: it is an object with sockets
@@ -16,6 +18,12 @@ interface BeamState {
   route: BeamRoute | null
   failure: BeamFailure | null
   messages: BeamMessage[]
+  /** File transfers by id, both directions — rendered merged into the session
+   *  timeline. Insertion order is arrival order, which is what we render. */
+  transfers: Record<string, BeamTransfer>
+  /** The six-digit safety number both devices should agree on. Null until the
+   *  channel is up, and null if a fingerprint could not be read. */
+  sas: string | null
   /** True when the code came from a scanned link rather than being minted here. */
   joinedFromLink: boolean
 
@@ -26,6 +34,12 @@ interface BeamState {
   connect(): void
   disconnect(): void
   send(body: string): boolean
+  sendFiles(files: Iterable<File>): void
+  /** Accept an incoming offer. Must be called from the click itself — on
+   *  Chrome/Edge it opens the save dialog, which needs the user's activation. */
+  acceptTransfer(id: string): Promise<void>
+  declineTransfer(id: string): void
+  cancelTransfer(id: string): void
   clearMessages(): void
 }
 
@@ -37,6 +51,8 @@ export const useBeamStore = create<BeamState>((set, get) => ({
   route: null,
   failure: null,
   messages: [],
+  transfers: {},
+  sas: null,
   joinedFromLink: false,
 
   setCode(raw) {
@@ -46,7 +62,7 @@ export const useBeamStore = create<BeamState>((set, get) => ({
 
   newCode() {
     get().disconnect()
-    set({ code: mintCode(), role: 'host', joinedFromLink: false, messages: [], failure: null, route: null })
+    set({ code: mintCode(), role: 'host', joinedFromLink: false, messages: [], transfers: {}, failure: null, route: null })
     get().connect()
   },
 
@@ -57,7 +73,7 @@ export const useBeamStore = create<BeamState>((set, get) => ({
     // 'guest' is a label the room echoes to the peer and nothing more — the
     // actual offer/answer roles are settled by BeamSession's nonce tie-break,
     // so two devices that both called themselves 'guest' still connect.
-    set({ code, role: 'guest', joinedFromLink: false, messages: [], failure: null, route: null })
+    set({ code, role: 'guest', joinedFromLink: false, messages: [], transfers: {}, failure: null, route: null })
     get().connect()
   },
 
@@ -65,7 +81,7 @@ export const useBeamStore = create<BeamState>((set, get) => ({
     const { code, role } = get()
     if (!isValidCode(code)) return
     session?.close()
-    set({ phase: 'idle', failure: null, route: null, signalling: false })
+    set({ phase: 'idle', failure: null, route: null, signalling: false, sas: null })
 
     session = new BeamSession(code, role, {
       onPhase: (phase) => set({ phase }),
@@ -73,6 +89,8 @@ export const useBeamStore = create<BeamState>((set, get) => ({
       onFailure: (failure) => set({ failure }),
       onRoute: (route) => set({ route }),
       onSignalling: (signalling) => set({ signalling }),
+      onTransfer: (t) => set((s) => ({ transfers: { ...s.transfers, [t.id]: t } })),
+      onSas: (sas) => set({ sas }),
     })
     session.start()
   },
@@ -80,13 +98,44 @@ export const useBeamStore = create<BeamState>((set, get) => ({
   disconnect() {
     session?.close()
     session = null
-    set({ phase: 'idle', signalling: false, route: null })
+    set({ phase: 'idle', signalling: false, route: null, sas: null })
   },
 
   send(body) {
     const trimmed = body.replace(/\s+$/, '')
     if (!trimmed) return false
     return session?.send(trimmed) != null
+  },
+
+  sendFiles(files) {
+    for (const file of files) session?.sendFile(file)
+  },
+
+  async acceptTransfer(id) {
+    const t = get().transfers[id]
+    if (!t || t.status !== 'offered' || !session) return
+    if (supportsStreamingSave()) {
+      // The picker MUST be the first thing this click does — user activation
+      // does not survive arbitrary awaits.
+      const sink = await createDiskSink(t.name)
+      if (!sink) {
+        // Closing the save dialog IS an answer; tell the sender rather than
+        // leaving their offer hanging.
+        session.declineFile(id)
+        return
+      }
+      session.acceptFile(id, sink)
+      return
+    }
+    session.acceptFile(id, createMemorySink(t.name, t.mime))
+  },
+
+  declineTransfer(id) {
+    session?.declineFile(id)
+  },
+
+  cancelTransfer(id) {
+    session?.cancelTransfer(id)
   },
 
   clearMessages() {
