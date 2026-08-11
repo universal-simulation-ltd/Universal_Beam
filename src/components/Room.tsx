@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, type DragEvent } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useFileDrop } from '@unisim/sdk'
 import { useBeamStore } from '../stores/beamStore'
 import { asSingleLink, canReadClipboard, readClipboard, writeClipboard } from '../lib/clipboard'
 import { formatBytes, type BeamTransfer } from '../lib/files'
@@ -30,7 +31,16 @@ export default function Room() {
 
   const live = phase === 'connected'
   const listEnd = useRef<HTMLDivElement>(null)
-  const [dragging, setDragging] = useState(false)
+
+  // `clickToBrowse` off: this zone is the whole connected panel, and it already
+  // contains a textarea and four buttons — making it one big button too would be
+  // ambiguous for a mouse and wrong for a screen reader. The panel takes drops;
+  // "Send a file" below opens the picker.
+  const drop = useFileDrop({
+    onFiles: sendFiles,
+    clickToBrowse: false,
+    disabled: !live,
+  })
 
   const timeline: TimelineItem[] = [
     ...messages.map((m): TimelineItem => ({ kind: 'msg', key: `m-${m.id}`, at: m.at, body: m.body, dir: m.dir })),
@@ -41,20 +51,12 @@ export default function Room() {
     listEnd.current?.scrollIntoView({ block: 'end', behavior: 'smooth' })
   }, [timeline.length])
 
-  function onDrop(e: DragEvent) {
-    e.preventDefault()
-    setDragging(false)
-    if (live && e.dataTransfer.files.length) sendFiles(e.dataTransfer.files)
-  }
-
   return (
     <div className="space-y-6">
       <section
-        onDragOver={(e) => { e.preventDefault(); if (live) setDragging(true) }}
-        onDragLeave={() => setDragging(false)}
-        onDrop={onDrop}
+        {...drop.dropzoneProps}
         className={`rounded-2xl border bg-white p-6 transition dark:bg-slate-900 ${
-          dragging
+          drop.over
             ? 'border-orange-400 ring-2 ring-orange-200 dark:ring-orange-900'
             : 'border-slate-200 dark:border-slate-700'
         }`}
@@ -144,7 +146,9 @@ function Composer({
   const [draft, setDraft] = useState('')
   const [pasteHint, setPasteHint] = useState(false)
   const ref = useRef<HTMLTextAreaElement>(null)
-  const fileRef = useRef<HTMLInputElement>(null)
+  // Only the input and `open()` are used here — the drop target is the whole
+  // panel above, not this row of buttons.
+  const picker = useFileDrop({ onFiles: onSendFiles, clickToBrowse: false, disabled })
 
   function submit() {
     if (disabled) return
@@ -195,20 +199,10 @@ function Composer({
         >
           Send
         </button>
-        <input
-          ref={fileRef}
-          type="file"
-          multiple
-          className="hidden"
-          data-testid="file-input"
-          onChange={(e) => {
-            if (e.target.files?.length) onSendFiles(e.target.files)
-            e.target.value = ''
-          }}
-        />
+        <input {...picker.inputProps} className="hidden" data-testid="file-input" />
         <button
           type="button"
-          onClick={() => fileRef.current?.click()}
+          onClick={picker.open}
           disabled={disabled}
           data-testid="send-file"
           className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
