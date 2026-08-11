@@ -1,4 +1,7 @@
-// The limitations, on the page rather than buried.
+// The limitations, on the page rather than in a support article somewhere.
+// Folded shut by default to keep the pairing screen short, but folded — not
+// trimmed, not softened: every claim is one click away, and the list below
+// stays complete regardless of how much of it is on screen at rest.
 //
 // Every claim here is scoped to the leg the user is actually on — the standing
 // suite rule. Three sentences are deliberately absent, and must stay absent:
@@ -53,10 +56,32 @@ const ITEMS: { title: string; body: string }[] = [
 
 export default function Honesty() {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
-      <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
-        What Beam does, and what it cannot do
-      </h2>
+    <details
+      data-testid="honesty-section"
+      className="group rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900"
+    >
+      <summary
+        data-testid="honesty-toggle"
+        className="flex cursor-pointer list-none items-center justify-between gap-3 outline-none focus-visible:ring-2 focus-visible:ring-orange-200 dark:focus-visible:ring-orange-900 [&::-webkit-details-marker]:hidden"
+      >
+        <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+          What Beam does, and what it cannot do
+        </h2>
+        <svg
+          viewBox="0 0 20 20"
+          aria-hidden="true"
+          className="h-4 w-4 shrink-0 text-slate-400 transition-transform group-open:rotate-180"
+        >
+          <path
+            d="M5 7.5 10 12.5 15 7.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </summary>
       <dl className="mt-4 grid gap-x-8 gap-y-5 sm:grid-cols-2">
         {ITEMS.map((item) => (
           <div key={item.title}>
@@ -79,6 +104,6 @@ export default function Honesty() {
         </a>{' '}
         is the right tool, and it is free.
       </p>
-    </section>
+    </details>
   )
 }
