@@ -26,6 +26,12 @@ interface BeamState {
   sas: string | null
   /** True when the code came from a scanned link rather than being minted here. */
   joinedFromLink: boolean
+  /** The peer's protocol version, or null while it is still undecided. `1` is
+   *  a build that predates files and will swallow a file offer in silence. */
+  peerProtocol: number | null
+  /** A newer build of Beam has taken over the service worker, so THIS tab is
+   *  running code that is already out of date. See main.tsx. */
+  updateReady: boolean
 
   setCode(raw: string): void
   newCode(): void
@@ -41,6 +47,7 @@ interface BeamState {
   declineTransfer(id: string): void
   cancelTransfer(id: string): void
   clearMessages(): void
+  noteUpdateReady(): void
 }
 
 export const useBeamStore = create<BeamState>((set, get) => ({
@@ -54,6 +61,8 @@ export const useBeamStore = create<BeamState>((set, get) => ({
   transfers: {},
   sas: null,
   joinedFromLink: false,
+  peerProtocol: null,
+  updateReady: false,
 
   setCode(raw) {
     if (get().phase !== 'idle' && get().phase !== 'failed' && get().phase !== 'ended') return
@@ -81,7 +90,7 @@ export const useBeamStore = create<BeamState>((set, get) => ({
     const { code, role } = get()
     if (!isValidCode(code)) return
     session?.close()
-    set({ phase: 'idle', failure: null, route: null, signalling: false, sas: null })
+    set({ phase: 'idle', failure: null, route: null, signalling: false, sas: null, peerProtocol: null })
 
     session = new BeamSession(code, role, {
       onPhase: (phase) => set({ phase }),
@@ -91,6 +100,7 @@ export const useBeamStore = create<BeamState>((set, get) => ({
       onSignalling: (signalling) => set({ signalling }),
       onTransfer: (t) => set((s) => ({ transfers: { ...s.transfers, [t.id]: t } })),
       onSas: (sas) => set({ sas }),
+      onPeerProtocol: (peerProtocol) => set({ peerProtocol }),
     })
     session.start()
   },
@@ -98,7 +108,7 @@ export const useBeamStore = create<BeamState>((set, get) => ({
   disconnect() {
     session?.close()
     session = null
-    set({ phase: 'idle', signalling: false, route: null, sas: null })
+    set({ phase: 'idle', signalling: false, route: null, sas: null, peerProtocol: null })
   },
 
   send(body) {
@@ -140,6 +150,10 @@ export const useBeamStore = create<BeamState>((set, get) => ({
 
   clearMessages() {
     set({ messages: [] })
+  },
+
+  noteUpdateReady() {
+    set({ updateReady: true })
   },
 }))
 

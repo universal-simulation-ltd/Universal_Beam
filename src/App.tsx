@@ -7,6 +7,7 @@ import PairCard from './components/PairCard'
 import Room from './components/Room'
 import FailureCard from './components/FailureCard'
 import Honesty from './components/Honesty'
+import UpdateBanner from './components/UpdateBanner'
 import { initFromUrl, useBeamStore } from './stores/beamStore'
 
 // The single page container. The navbar (via the SDK's `contentClassName`), the
@@ -63,6 +64,7 @@ export default function App() {
         </header>
 
         <div className="space-y-6">
+          <UpdateBanner />
           {/* On failure the explanation goes ABOVE the pairing card, and the
               pairing card stays. Replacing it with the error would leave the
               user reading why it didn't work with no code, no QR and no join

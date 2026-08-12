@@ -1,5 +1,46 @@
 # Universal Beam — handover
 
+> **Update 2026-08-12 — a stale tab now says so, and a peer running an older
+> build is named instead of silently swallowing your file.** Reported from a
+> real session: a file sent browser-to-browser did nothing, and only one end had
+> a "Send a file" button at all. Neither was a bug in the file code — the
+> receiving device was still running the **text-only v1** it had cached. Beam
+> shipped text-only on 08-06 and files on 08-10, and `registerSW.js` is a bare
+> registration: workbox does skipWaiting + clientsClaim, so the new worker takes
+> over, but **the page already running keeps its old JavaScript for the whole
+> visit**. v1 drops any frame that is not `t:'text'` without a word, so the
+> offer vanished and the sender waited on an accept that could never arrive.
+>
+> Two fixes, and note what each one can and cannot reach:
+>
+> 1. **A `peer` capability frame** (`PROTOCOL_VERSION` in `rtc.ts`), sent by both
+>    ends when the channel opens. ⚠️ **The signal is silence** — a v1 build has
+>    no such frame, so no reply within `PEER_HELLO_MS` (3 s) *is* the verdict.
+>    `peerProtocol` is null while undecided and the UI must not warn during that
+>    window, or every healthy pairing flashes an accusation for three seconds.
+>    This half works against the v1 devices already out there, today.
+> 2. **An update banner** on `controllerchange` (`main.tsx`). Gated on
+>    `wasControlled`, because that event also fires on a first-ever registration
+>    when nothing is stale. It deliberately does **not** auto-reload: mid-session
+>    that kills a live channel, and while waiting it would mint a fresh code and
+>    invalidate the QR someone is walking across the house to scan. This half
+>    only helps from the NEXT update onward — a device caching v1 right now still
+>    needs one manual reload, because v1 has none of this code in it.
+>
+> Both directions are mechanised in `e2e/files.e2e.ts`, including the false
+> positive that would be worse than the bug (two current builds must never
+> accuse each other), with a fake legacy peer made by swallowing the outgoing
+> `peer` frame. The reverse direction — guest → host — had **no coverage at all**
+> before this; every earlier spec sent host → guest.
+>
+> ⚠️ **Known red test, not from this work:** `beam.e2e.ts` › *"never promises
+> what the browser cannot do"* fails on main. Collapsing the honesty section
+> behind `<details>` (3981b4b) put *"Both devices need the internet"* inside
+> collapsed content, where `innerText` cannot see it — and the test's own comment
+> asks for that line "present rather than buried". Verified failing on a clean
+> checkout. It needs a copy/design call: surface that one line above the fold, or
+> relax the assertion.
+
 > **Update 2026-08-12 — the pairing QR enlarges.** Tapping it opens
 > `EnlargeQrModal.tsx` — the page dimmed behind, the code filling the screen,
 > click anywhere or Escape to close — mirroring Universal QR's `EnlargeModal`,

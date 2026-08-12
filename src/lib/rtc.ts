@@ -70,6 +70,26 @@ export type BeamPhase =
 
 export type BeamRole = 'host' | 'guest'
 
+/** What this build can do on the wire. Bump it only when the protocol gains
+ *  something a peer can be MISSING, so that "your peer is older" stays a
+ *  statement about capability rather than about a build number.
+ *
+ *  1 — text only. Shipped 2026-08-06.
+ *  2 — files (see files.ts) and the safety number. Shipped 2026-08-10.
+ *
+ *  This matters because of the service worker: a device that cached v1 serves
+ *  it back for a whole visit, and v1 drops every frame it does not recognise
+ *  WITHOUT A WORD. A file offer sent to one of those simply vanishes, and the
+ *  sender sits on "Waiting for the other device to accept" forever. */
+export const PROTOCOL_VERSION = 2
+
+/** How long to wait for the peer to say what it is before concluding it cannot.
+ *  There is no negative reply to wait for — a v1 build answers a `peer` frame
+ *  with silence — so silence past this deadline IS the answer. Comfortably
+ *  longer than a data channel's first round trip, short enough that the notice
+ *  arrives while the user is still looking at the screen. */
+const PEER_HELLO_MS = 3_000
+
 export interface BeamMessage {
   id: string
   body: string
@@ -91,6 +111,10 @@ export interface BeamCallbacks {
   /** The six-digit safety number, once both DTLS fingerprints are known.
    *  Null when a fingerprint could not be read — show nothing, never guess. */
   onSas(sas: string | null): void
+  /** The peer's PROTOCOL_VERSION, once known or once its silence has settled
+   *  the question. Null while we are still waiting to find out — which is not
+   *  the same as 1, and the UI must not warn during it. */
+  onPeerProtocol(v: number | null): void
 }
 
 /** How long we let ICE run before declaring direct-or-fail. Real successful
@@ -156,9 +180,12 @@ export class BeamSession {
   private queuedSignals: Signal[] = []
   private remoteDescriptionSet = false
 
+  private peerProtocol: number | null = null
+
   private watchdog: ReturnType<typeof setTimeout> | null = null
   private lingerTimer: ReturnType<typeof setTimeout> | null = null
   private rejoinTimer: ReturnType<typeof setTimeout> | null = null
+  private peerHelloTimer: ReturnType<typeof setTimeout> | null = null
 
   // Evidence for diagnose(). Collected as we go so a failure can be explained
   // from what actually happened rather than from a guess.
@@ -225,8 +252,8 @@ export class BeamSession {
   }
 
   private clearTimers(): void {
-    for (const t of [this.watchdog, this.lingerTimer, this.rejoinTimer]) if (t) clearTimeout(t)
-    this.watchdog = this.lingerTimer = this.rejoinTimer = null
+    for (const t of [this.watchdog, this.lingerTimer, this.rejoinTimer, this.peerHelloTimer]) if (t) clearTimeout(t)
+    this.watchdog = this.lingerTimer = this.rejoinTimer = this.peerHelloTimer = null
   }
 
   private setPhase(p: BeamPhase): void {
@@ -493,6 +520,14 @@ export class BeamSession {
       this.setPhase('connected')
       void this.reportRoute()
       void this.reportSas()
+      // Say what we are, then give the peer its moment to answer. Armed AFTER
+      // clearTimers() above, which would otherwise cancel it immediately.
+      this.sendPeerHello()
+      this.peerHelloTimer = setTimeout(() => {
+        this.peerHelloTimer = null
+        // Nothing came back. That is a build from before this frame existed.
+        if (this.peerProtocol === null) this.notePeerProtocol(1)
+      }, PEER_HELLO_MS)
       // Hang up on the rendezvous. From here the two browsers talk directly and
       // the server has no part in the session — including no ability to see,
       // store or relay a single byte of it.
@@ -514,7 +549,13 @@ export class BeamSession {
       }
       let m: unknown
       try { m = JSON.parse(e.data) } catch { return }
-      const f = m as { t?: string; id?: string; body?: string; at?: number }
+      const f = m as { t?: string; id?: string; body?: string; at?: number; protocol?: number }
+      if (f.t === 'peer') {
+        // An older build that knew the frame but not its shape still counts as
+        // "speaks the handshake"; default it to the version that introduced it.
+        this.notePeerProtocol(typeof f.protocol === 'number' ? f.protocol : PROTOCOL_VERSION)
+        return
+      }
       if (typeof f.t === 'string' && isFileFrame(f.t)) {
         this.files?.onFrame(f as Parameters<FileTransferEngine['onFrame']>[0])
         return
@@ -527,6 +568,23 @@ export class BeamSession {
         at: typeof f.at === 'number' ? f.at : Date.now(),
       })
     }
+  }
+
+  /** Announce this build's protocol version. Sent by both ends the moment the
+   *  channel opens, so neither has to be the one that asks. A v1 peer parses
+   *  this, finds `t !== 'text'`, and drops it — exactly as intended. */
+  private sendPeerHello(): void {
+    if (this.dc?.readyState !== 'open') return
+    try {
+      this.dc.send(JSON.stringify({ v: 1, t: 'peer', protocol: PROTOCOL_VERSION }))
+    } catch { /* channel raced shut */ }
+  }
+
+  private notePeerProtocol(v: number): void {
+    if (this.peerHelloTimer) { clearTimeout(this.peerHelloTimer); this.peerHelloTimer = null }
+    if (this.peerProtocol === v) return
+    this.peerProtocol = v
+    this.cb.onPeerProtocol(v)
   }
 
   /** Derive the safety number from the two DTLS fingerprints in the SDP —
@@ -605,6 +663,12 @@ export class BeamSession {
     this.queuedSignals = []
     this.negotiating = false
     this.peerTie = null
+    // Whoever we talk to next is a different device until it says otherwise.
+    // Leaving a stale 1 here would warn about a peer that has since gone.
+    if (this.peerProtocol !== null) {
+      this.peerProtocol = null
+      this.cb.onPeerProtocol(null)
+    }
   }
 }
 

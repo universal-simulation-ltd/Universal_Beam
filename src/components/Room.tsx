@@ -28,8 +28,12 @@ export default function Room() {
   const send = useBeamStore((s) => s.send)
   const sendFiles = useBeamStore((s) => s.sendFiles)
   const disconnect = useBeamStore((s) => s.disconnect)
+  const peerProtocol = useBeamStore((s) => s.peerProtocol)
 
   const live = phase === 'connected'
+  // Null means "not decided yet" — warning during that window would flash a
+  // scary sentence at every healthy pairing for the first few seconds.
+  const legacyPeer = peerProtocol !== null && peerProtocol < 2
   const listEnd = useRef<HTMLDivElement>(null)
 
   // `clickToBrowse` off: this zone is the whole connected panel, and it already
@@ -39,7 +43,7 @@ export default function Room() {
   const drop = useFileDrop({
     onFiles: sendFiles,
     clickToBrowse: false,
-    disabled: !live,
+    disabled: !live || legacyPeer,
   })
 
   const timeline: TimelineItem[] = [
@@ -86,7 +90,24 @@ export default function Room() {
           <StatusPill />
         </div>
 
-        <Composer disabled={!live} onSend={send} onSendFiles={sendFiles} />
+        {live && legacyPeer && (
+          <p
+            data-testid="legacy-peer"
+            className="mt-4 rounded-lg bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-800 dark:bg-amber-950 dark:text-amber-200"
+          >
+            The other device is running an older version of Beam. Text still
+            crosses, but it cannot receive files — an older build drops the
+            offer without saying anything, which is why sending one would look
+            like nothing happening. Ask them to reload the page, then try again.
+          </p>
+        )}
+
+        <Composer
+          disabled={!live}
+          filesDisabled={legacyPeer}
+          onSend={send}
+          onSendFiles={sendFiles}
+        />
       </section>
 
       <section
@@ -136,19 +157,23 @@ export default function Room() {
 
 function Composer({
   disabled,
+  filesDisabled,
   onSend,
   onSendFiles,
 }: {
   disabled: boolean
+  /** Text can still cross, but this peer cannot take a file. */
+  filesDisabled: boolean
   onSend: (body: string) => boolean
   onSendFiles: (files: Iterable<File>) => void
 }) {
   const [draft, setDraft] = useState('')
   const [pasteHint, setPasteHint] = useState(false)
   const ref = useRef<HTMLTextAreaElement>(null)
+  const noFiles = disabled || filesDisabled
   // Only the input and `open()` are used here — the drop target is the whole
   // panel above, not this row of buttons.
-  const picker = useFileDrop({ onFiles: onSendFiles, clickToBrowse: false, disabled })
+  const picker = useFileDrop({ onFiles: onSendFiles, clickToBrowse: false, disabled: noFiles })
 
   function submit() {
     if (disabled) return
@@ -203,7 +228,8 @@ function Composer({
         <button
           type="button"
           onClick={picker.open}
-          disabled={disabled}
+          disabled={noFiles}
+          title={filesDisabled ? 'The other device is on an older version of Beam and cannot receive files' : undefined}
           data-testid="send-file"
           className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
         >
@@ -221,7 +247,8 @@ function Composer({
           </button>
         )}
         <span className="ml-auto text-xs text-slate-400 dark:text-slate-500">
-          Enter sends · Shift+Enter for a new line · drop a file anywhere here
+          Enter sends · Shift+Enter for a new line
+          {!filesDisabled && ' · drop a file anywhere here'}
         </span>
       </div>
 

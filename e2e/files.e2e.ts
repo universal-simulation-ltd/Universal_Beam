@@ -15,12 +15,24 @@ import { expect, test, type Browser, type Page } from '@playwright/test'
 // the sink itself is four calls into a browser API. The per-browser split is
 // covered by unit tests on supportsStreamingSave().
 
-async function openApp(browser: Browser, path = '/'): Promise<Page> {
+async function openApp(browser: Browser, path = '/', muteHandshake = false): Promise<Page> {
   const context = await browser.newContext()
   await context.addInitScript(() => {
     // Force the Firefox/Safari path: accumulate in memory, then download.
     Object.defineProperty(window, 'showSaveFilePicker', { value: undefined, configurable: true })
   })
+  if (muteHandshake) {
+    // Impersonate a pre-files build. v1 has no `peer` frame to send, so what
+    // the other end actually observes is silence — swallowing the frame on the
+    // way out reproduces that exactly, without needing to serve the old bundle.
+    await context.addInitScript(() => {
+      const send = RTCDataChannel.prototype.send
+      RTCDataChannel.prototype.send = function (this: RTCDataChannel, data: string) {
+        if (typeof data === 'string' && data.includes('"t":"peer"')) return
+        return send.call(this, data as string)
+      } as typeof send
+    })
+  }
   const page = await context.newPage()
   await page.goto(path)
   return page
@@ -112,6 +124,73 @@ test.describe('beaming a file', () => {
     await b.getByTestId('composer').fill(after)
     await b.getByTestId('send').click()
     await expect(a.getByTestId('message-in')).toContainText(after, { timeout: 15_000 })
+
+    await a.context().close()
+    await b.context().close()
+  })
+
+  // The version handshake cuts both ways, and THIS is the direction that can
+  // regress silently: if the `peer` frame is ever dropped, renamed or delayed
+  // past PEER_HELLO_MS, two perfectly current browsers start accusing each
+  // other of being out of date and disable file sending on a session that
+  // would have worked. A false positive here is worse than the bug it guards.
+  test('two current builds never accuse each other of being old, and either end can send', async ({ browser }) => {
+    test.setTimeout(120_000)
+    const [a, b] = await pairTwo(browser)
+
+    // Past PEER_HELLO_MS (3 s) with room to spare — the whole point is that the
+    // deadline has been and gone without a verdict of "legacy".
+    await a.waitForTimeout(5_000)
+
+    for (const page of [a, b]) {
+      await expect(page.getByTestId('legacy-peer')).toHaveCount(0)
+      await expect(page.getByTestId('send-file')).toBeEnabled()
+    }
+
+    // And the reverse direction actually carries bytes. Every other spec in
+    // this file sends host → guest; guest → host had no coverage at all.
+    const payload = randomBytes(512 * 1024)
+    await b.getByTestId('file-input').setInputFiles({
+      name: 'from-the-guest.bin',
+      mimeType: 'application/octet-stream',
+      buffer: payload,
+    })
+
+    await expect(a.getByTestId('transfer-in')).toBeVisible({ timeout: 15_000 })
+    const downloadPromise = a.waitForEvent('download', { timeout: 60_000 })
+    await a.getByTestId('accept-file').click()
+    const download = await downloadPromise
+    expect(download.suggestedFilename()).toBe('from-the-guest.bin')
+    expect(sha256(readFileSync(await download.path()))).toBe(sha256(payload))
+
+    await expect(b.getByTestId('transfer-out')).toHaveAttribute('data-status', 'done', { timeout: 15_000 })
+
+    await a.context().close()
+    await b.context().close()
+  })
+
+  // The bug this whole handshake exists for: a peer running the text-only build
+  // swallows a file offer without a word, so the sender waits on an accept that
+  // can never come. Being told beforehand is the entire fix.
+  test('a peer that cannot speak the handshake is named as old, and file sending is closed off', async ({ browser }) => {
+    test.setTimeout(120_000)
+    const a = await openApp(browser)
+    const code = (await a.getByTestId('pair-code').innerText()).trim()
+    const b = await openApp(browser, `/?c=${code}`, true)
+    await expect(status(a)).toHaveAttribute('data-phase', 'connected', { timeout: 45_000 })
+    await expect(status(b)).toHaveAttribute('data-phase', 'connected', { timeout: 45_000 })
+
+    // The verdict lands on its own, from silence — nothing to click.
+    await expect(a.getByTestId('legacy-peer')).toBeVisible({ timeout: 15_000 })
+    await expect(a.getByTestId('legacy-peer')).toContainText('older version')
+    await expect(a.getByTestId('send-file')).toBeDisabled()
+
+    // Text is unaffected: the older build understands it perfectly, and
+    // degrading the half that still works would be its own bug.
+    const note = `text still crosses ${Date.now()}`
+    await a.getByTestId('composer').fill(note)
+    await a.getByTestId('send').click()
+    await expect(b.getByTestId('message-in')).toContainText(note, { timeout: 15_000 })
 
     await a.context().close()
     await b.context().close()
