@@ -64,9 +64,22 @@ export default function Honesty() {
         data-testid="honesty-toggle"
         className="flex cursor-pointer list-none items-center justify-between gap-3 outline-none focus-visible:ring-2 focus-visible:ring-orange-200 dark:focus-visible:ring-orange-900 [&::-webkit-details-marker]:hidden"
       >
-        <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
-          What Beam does, and what it cannot do
-        </h2>
+        {/* ⚠️ The internet line lives in the SUMMARY, not in the panel below.
+            Collapsing this section put the product's one real limitation behind
+            a click, where a user who never opens it would never meet it — and
+            it is precisely the thing they need before deciding Beam is the
+            right tool. Content inside <details> but outside <summary> is hidden
+            when closed, so "above the fold" here means "inside the summary".
+            e2e/beam.e2e.ts asserts it is on the page unopened; keep it there. */}
+        <div className="min-w-0">
+          <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+            What Beam does, and what it cannot do
+          </h2>
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+            Both devices need the internet, even on the same Wi-Fi — a web page
+            cannot browse your local network.
+          </p>
+        </div>
         <svg
           viewBox="0 0 20 20"
           aria-hidden="true"
