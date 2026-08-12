@@ -10,10 +10,15 @@ import StatusPill from './StatusPill'
 // The pairing half of the app: this device's code and QR on the left, "I have a
 // code from another device" on the right.
 //
-// Both halves are on screen at once, deliberately. There is no "send or
-// receive?" question to answer first, because the roles are symmetric once the
-// data channel is up — either end can type. Making the user pick a role would
-// be asking them to decide something the product does not actually need to know.
+// There is no "send or receive?" question to answer first, because the roles
+// are symmetric once the data channel is up — either end can type. Making the
+// user pick a role would be asking them to decide something the product does
+// not actually need to know.
+//
+// The join half is folded away behind its own heading rather than removed: the
+// common path is reading your own code aloud or scanning the square, so the
+// entry field is one click away instead of competing with it. It stays a plain
+// <details>, so the browser handles keyboard, focus and find-in-page for us.
 
 export default function PairCard() {
   const code = useBeamStore((s) => s.code)
@@ -88,11 +93,34 @@ export default function PairCard() {
         </button>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
-        <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
-          Got a code from the other device?
-        </h2>
-        <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+      <details
+        data-testid="join-section"
+        className="group h-fit rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900"
+      >
+        <summary
+          data-testid="join-toggle"
+          className="flex cursor-pointer list-none items-center justify-between gap-3 outline-none focus-visible:ring-2 focus-visible:ring-orange-200 dark:focus-visible:ring-orange-900 [&::-webkit-details-marker]:hidden"
+        >
+          <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+            Got a code from the other device?
+          </h2>
+          <svg
+            viewBox="0 0 20 20"
+            aria-hidden="true"
+            className="h-4 w-4 shrink-0 text-slate-400 transition-transform group-open:rotate-180"
+          >
+            <path
+              d="M5 7.5 10 12.5 15 7.5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </summary>
+
+        <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">
           Type it here instead. Whichever device enters the other&rsquo;s code, the
           result is the same — once you are connected, either end can send.
         </p>
@@ -109,7 +137,7 @@ export default function PairCard() {
             nothing else. After that they talk directly and it drops out.
           </p>
         </div>
-      </section>
+      </details>
     </div>
   )
 }
