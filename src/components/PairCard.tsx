@@ -173,7 +173,7 @@ function JoinForm({ onJoin, busy }: { onJoin: (code: string) => void; busy: bool
         type="submit"
         disabled={!ready || busy}
         data-testid="join-submit"
-        className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-700 disabled:cursor-not-allowed disabled:bg-slate-300 dark:disabled:bg-slate-700"
+        className="rounded-lg bg-orange-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-800 disabled:cursor-not-allowed disabled:bg-slate-300 dark:disabled:bg-slate-700"
       >
         Connect
       </button>

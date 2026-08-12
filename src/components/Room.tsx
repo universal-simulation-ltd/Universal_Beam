@@ -195,7 +195,7 @@ function Composer({
           onClick={submit}
           disabled={disabled || !draft.trim()}
           data-testid="send"
-          className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-700 disabled:cursor-not-allowed disabled:bg-slate-300 dark:disabled:bg-slate-700"
+          className="rounded-lg bg-orange-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-800 disabled:cursor-not-allowed disabled:bg-slate-300 dark:disabled:bg-slate-700"
         >
           Send
         </button>
@@ -368,7 +368,7 @@ function TransferRow({ t }: { t: BeamTransfer }) {
               type="button"
               onClick={() => { void acceptTransfer(t.id) }}
               data-testid="accept-file"
-              className="rounded-md bg-orange-600 px-3 py-1 text-xs font-semibold text-white transition hover:bg-orange-700"
+              className="rounded-md bg-orange-700 px-3 py-1 text-xs font-semibold text-white transition hover:bg-orange-800"
             >
               {supportsStreamingSave() ? 'Save…' : 'Accept'}
             </button>

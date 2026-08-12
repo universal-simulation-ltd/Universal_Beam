@@ -18,7 +18,7 @@ import { initFromUrl, useBeamStore } from './stores/beamStore'
 // 1280px row with the profile cluster pinned 12px off the VIEWPORT edge. At
 // 1440px that put the bar at 80–1360 over content at 208–1232, overhanging it
 // by ~128px on each side. Universal PDF and Images are the pattern this copies.
-export const CONTAINER = 'mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8'
+export const CONTAINER = 'mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8'
 
 const REPO_URL = 'https://github.com/universal-simulation-ltd/Universal_Beam'
 
