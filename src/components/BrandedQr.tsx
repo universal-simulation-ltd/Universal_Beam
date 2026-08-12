@@ -19,11 +19,11 @@ import QRCodeStyling from 'qr-code-styling'
 
 const SIZE = 160
 
-function makeQr(data: string): QRCodeStyling {
+function makeQr(data: string, size: number): QRCodeStyling {
   return new QRCodeStyling({
     type: 'svg',
-    width: SIZE,
-    height: SIZE,
+    width: size,
+    height: size,
     // No quiet zone here — the white padded card around the component provides
     // it, exactly as it did for the plain code this replaces.
     margin: 0,
@@ -40,27 +40,41 @@ function makeQr(data: string): QRCodeStyling {
 
 /** Renders `value` as a UNI·SIM branded QR. The adjacent six-character code is
  *  the accessible path to the same pairing, so the picture itself is hidden
- *  from assistive tech. */
-export default function BrandedQr({ value }: { value: string }) {
+ *  from assistive tech.
+ *
+ *  `size` is the rendered edge in px. The enlarged view passes a much bigger
+ *  one: a 160px SVG scaled up with CSS would blur the finder eyes, and the
+ *  whole point of enlarging is a camera reading it from across a desk. */
+export default function BrandedQr({
+  value,
+  size = SIZE,
+  testId = 'pair-qr',
+}: {
+  value: string
+  size?: number
+  testId?: string
+}) {
   const host = useRef<HTMLDivElement>(null)
   const qr = useRef<QRCodeStyling | null>(null)
 
   useEffect(() => {
     if (!host.current) return
+    // Size is fixed at construction, so a change means a new instance —
+    // `update()` would leave the old dimensions in place.
     if (!qr.current) {
-      qr.current = makeQr(value)
+      qr.current = makeQr(value, size)
       qr.current.append(host.current)
     } else {
       qr.current.update({ data: value })
     }
-  }, [value])
+  }, [value, size])
 
   return (
     <div
       ref={host}
-      data-testid="pair-qr"
+      data-testid={testId}
       aria-hidden="true"
-      style={{ width: SIZE, height: SIZE }}
+      style={{ width: size, height: size }}
     />
   )
 }

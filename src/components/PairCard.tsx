@@ -4,6 +4,7 @@ import { WAITING_NUDGE_MS } from '../lib/rtc'
 import { isValidCode, normaliseCode } from '../lib/code'
 import { writeClipboard } from '../lib/clipboard'
 import BrandedQr from './BrandedQr'
+import EnlargeQrModal from './EnlargeQrModal'
 import StatusPill from './StatusPill'
 
 // The pairing half of the app: this device's code and QR on the left, "I have a
@@ -20,6 +21,7 @@ export default function PairCard() {
   const joinedFromLink = useBeamStore((s) => s.joinedFromLink)
   const newCode = useBeamStore((s) => s.newCode)
   const joinCode = useBeamStore((s) => s.joinCode)
+  const [enlarged, setEnlarged] = useState(false)
 
   const link = code ? joinUrl(code) : ''
 
@@ -47,9 +49,23 @@ export default function PairCard() {
 
         {link && (
           <div className="mt-5 flex flex-col items-center gap-4">
-            <div className="rounded-xl bg-white p-3 ring-1 ring-slate-200 dark:ring-slate-700">
+            {/* A button, not a div with a click handler: enlarging the code is
+                the one thing you do to it, and it has to be reachable by
+                keyboard. The picture stays aria-hidden — the six-character code
+                above is the accessible route to the same pairing — so the
+                button carries the label. */}
+            <button
+              type="button"
+              onClick={() => setEnlarged(true)}
+              data-testid="enlarge-qr"
+              aria-label="Enlarge the QR code"
+              className="group rounded-xl bg-white p-3 ring-1 ring-slate-200 transition hover:ring-orange-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 dark:ring-slate-700 dark:hover:ring-orange-400"
+            >
               <BrandedQr value={link} />
-            </div>
+              <span className="mt-2 block text-center text-[11px] font-medium text-slate-500 transition group-hover:text-orange-700 dark:text-slate-400">
+                Tap to enlarge
+              </span>
+            </button>
             <CopyButton
               text={link}
               idle="Copy the link"
@@ -58,6 +74,7 @@ export default function PairCard() {
             />
           </div>
         )}
+        {enlarged && link && <EnlargeQrModal value={link} onClose={() => setEnlarged(false)} />}
 
         <WaitingNudge />
 
