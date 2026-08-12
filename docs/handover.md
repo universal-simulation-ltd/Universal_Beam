@@ -1,5 +1,23 @@
 # Universal Beam — handover
 
+> **Update 2026-08-12 — the pairing QR enlarges.** Tapping it opens
+> `EnlargeQrModal.tsx` — the page dimmed behind, the code filling the screen,
+> click anywhere or Escape to close — mirroring Universal QR's `EnlargeModal`,
+> because two apps showing a code to scan should behave the same way.
+> ⚠️ **The big code is REGENERATED at the larger size, not scaled with CSS:** a
+> stretched 160px SVG softens the finder eyes, which is what a camera keys on.
+> `BrandedQr` therefore takes a `size` and rebuilds its `QRCodeStyling`
+> instance when it changes — `update()` only swaps the data and leaves the old
+> dimensions in place. The plate stays WHITE in dark mode; the modules are
+> near-black and inverting them for the theme would cost scans. The e2e in
+> `e2e/qr.e2e.ts` decodes the ENLARGED rendering with zxing too, so the same
+> "restyle nothing without keeping that spec green" rule now covers both sizes.
+> The trigger is a real `<button>` (keyboard-reachable); the picture stays
+> `aria-hidden` because the six-character code is the accessible route.
+>
+> Also on `^@unisim/sdk@0.99.0`: the navbar claim's "100%" moved to #c2410c —
+> #e05504 measured 3.84:1 on the white bar, under WCAG AA's 4.5:1 for text.
+
 > **Update 2026-08-10 — the pairing QR is now UNI·SIM branded, and its scan is
 > mechanised.** `BrandedQr.tsx` renders the same arrangement Universal QR ships
 > as its default (rounded #1c1917 modules, #e05504 finder eyes, EC 'H', the
