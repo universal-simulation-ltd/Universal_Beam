@@ -2,38 +2,13 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { UniversalProvider } from '@unisim/sdk'
 import App from './App'
-import { useBeamStore } from './stores/beamStore'
 import './index.css'
 
-// ── Noticing that this tab has gone stale ──────────────────────────────────
-//
-// vite-plugin-pwa's generated registerSW.js is a bare `register()` — it does
-// NOT reload the page when a new build lands. Workbox's skipWaiting +
-// clientsClaim mean the new worker takes control immediately, but the page
-// already running keeps the JavaScript it loaded, for its whole visit.
-//
-// So a device that cached an older Beam serves it back and runs it, once, with
-// nothing to say it is doing so. That produced a real and completely opaque
-// bug: the text-only build (2026-08-06 to 08-10) drops a file offer in silence,
-// so the SENDER sat on "Waiting for the other device to accept" while the
-// RECEIVER had no Send-a-file button and no idea it was behind.
-//
-// `controllerchange` is the moment the new worker takes over. Two things about
-// this listener, both deliberate:
-//
-//  * It is registered at module scope, not in an effect — StrictMode's
-//    double-invoked mount would otherwise add it twice.
-//  * It fires on the FIRST-EVER registration too, when a worker claims a page
-//    that had none. Nothing is stale in that case, so `wasControlled` gates it;
-//    without that check every first visit would be told to reload.
-//
-// What it does NOT do is reload for you — see the note in UpdateBanner.tsx.
-if ('serviceWorker' in navigator) {
-  const wasControlled = Boolean(navigator.serviceWorker.controller)
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (wasControlled) useBeamStore.getState().noteUpdateReady()
-  })
-}
+// Noticing that this tab has gone stale used to live here, as a
+// `controllerchange` listener. It moved into the SDK (`useAppUpdate`) once it
+// turned out to be true of every Universal App rather than of Beam — same
+// service-worker behaviour, same silence. See components/UpdateBanner.tsx for
+// the two parts that are still Beam's own.
 
 // Universal Beam moves text peer-to-peer and writes nothing to Supabase. We
 // still mount <UniversalProvider> so the shared navbar works and, when the

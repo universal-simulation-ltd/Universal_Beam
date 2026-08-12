@@ -29,9 +29,6 @@ interface BeamState {
   /** The peer's protocol version, or null while it is still undecided. `1` is
    *  a build that predates files and will swallow a file offer in silence. */
   peerProtocol: number | null
-  /** A newer build of Beam has taken over the service worker, so THIS tab is
-   *  running code that is already out of date. See main.tsx. */
-  updateReady: boolean
 
   setCode(raw: string): void
   newCode(): void
@@ -47,7 +44,6 @@ interface BeamState {
   declineTransfer(id: string): void
   cancelTransfer(id: string): void
   clearMessages(): void
-  noteUpdateReady(): void
 }
 
 export const useBeamStore = create<BeamState>((set, get) => ({
@@ -62,7 +58,6 @@ export const useBeamStore = create<BeamState>((set, get) => ({
   sas: null,
   joinedFromLink: false,
   peerProtocol: null,
-  updateReady: false,
 
   setCode(raw) {
     if (get().phase !== 'idle' && get().phase !== 'failed' && get().phase !== 'ended') return
@@ -150,10 +145,6 @@ export const useBeamStore = create<BeamState>((set, get) => ({
 
   clearMessages() {
     set({ messages: [] })
-  },
-
-  noteUpdateReady() {
-    set({ updateReady: true })
   },
 }))
 
