@@ -85,7 +85,7 @@ export default function App() {
               href="https://www.unisim.co.uk"
               target="_blank"
               rel="noreferrer"
-              className="text-slate-700 underline-offset-2 hover:text-orange-600 hover:underline dark:text-slate-300"
+              className="text-slate-700 underline-offset-2 hover:text-orange-700 hover:underline dark:text-slate-300 dark:hover:text-orange-400"
             >
               UNI SIM
             </a>

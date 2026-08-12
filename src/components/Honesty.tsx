@@ -98,7 +98,7 @@ export default function Honesty() {
           href="https://localsend.org"
           target="_blank"
           rel="noreferrer noopener"
-          className="font-medium text-slate-700 underline underline-offset-2 hover:text-orange-600 dark:text-slate-300"
+          className="font-medium text-slate-700 underline underline-offset-2 hover:text-orange-700 dark:text-slate-300 dark:hover:text-orange-400"
         >
           LocalSend
         </a>{' '}
