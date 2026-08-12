@@ -9,6 +9,17 @@ import FailureCard from './components/FailureCard'
 import Honesty from './components/Honesty'
 import { initFromUrl, useBeamStore } from './stores/beamStore'
 
+// The single page container. The navbar (via the SDK's `contentClassName`), the
+// page body and the footer all share it, so the suite switcher lines up with
+// the left edge of the page content — and the profile/changelog cluster with
+// its right edge — at every breakpoint.
+//
+// Without this the navbar falls back to the SDK's standalone default: a fixed
+// 1280px row with the profile cluster pinned 12px off the VIEWPORT edge. At
+// 1440px that put the bar at 80–1360 over content at 208–1232, overhanging it
+// by ~128px on each side. Universal PDF and Images are the pattern this copies.
+export const CONTAINER = 'mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8'
+
 const REPO_URL = 'https://github.com/universal-simulation-ltd/Universal_Beam'
 
 export default function App() {
@@ -28,6 +39,7 @@ export default function App() {
   return (
     <div className="flex min-h-screen flex-col bg-slate-100 dark:bg-slate-950">
       <UniversalAppsNavBar
+        contentClassName={CONTAINER}
         product="beam"
         productLogo={<ProductLogo />}
         productHomeHref={import.meta.env.BASE_URL}
@@ -38,7 +50,7 @@ export default function App() {
 
       <UsageTracker />
 
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
+      <main className={`${CONTAINER} flex-1 py-8`}>
         <header className="mb-8">
           <h1 className="text-2xl font-semibold text-slate-900 sm:text-3xl dark:text-slate-100">
             Send text and files straight between your devices
@@ -63,7 +75,7 @@ export default function App() {
       </main>
 
       <footer className="border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-        <div className="mx-auto flex w-full max-w-5xl flex-row items-center gap-3 px-4 py-4 text-xs text-slate-500 sm:gap-4 sm:px-6 lg:px-8 dark:text-slate-400">
+        <div className={`${CONTAINER} flex flex-row items-center gap-3 py-4 text-xs text-slate-500 sm:gap-4 dark:text-slate-400`}>
           <span>
             100% free — every feature, no paywalls. We pass a connection code,
             never your text or files. Hosted by{' '}

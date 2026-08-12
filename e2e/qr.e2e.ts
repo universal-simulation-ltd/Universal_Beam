@@ -24,8 +24,8 @@ function decodeQr(png: Buffer): string {
   return new QRCodeReader().decode(bitmap).getText()
 }
 
-async function qrScreenshot(page: Page): Promise<Buffer> {
-  const qr = page.getByTestId('pair-qr')
+async function qrScreenshot(page: Page, testId = 'pair-qr'): Promise<Buffer> {
+  const qr = page.getByTestId(testId)
   await expect(qr.locator('svg')).toBeVisible()
   // Screenshot the padded white card AROUND the code, not the code itself —
   // that padding is the quiet zone, and a decoder is entitled to it.
@@ -35,12 +35,12 @@ async function qrScreenshot(page: Page): Promise<Buffer> {
 /** The QR redraws asynchronously (it waits on the centre image), so poll the
  *  decode instead of racing it. An undecodable frame reads as '' and the poll
  *  keeps trying; only a persistent failure or a wrong payload fails the test. */
-async function expectQrToDecodeTo(page: Page, expected: string): Promise<void> {
+async function expectQrToDecodeTo(page: Page, expected: string, testId = 'pair-qr'): Promise<void> {
   await expect
     .poll(
       async () => {
         try {
-          return decodeQr(await qrScreenshot(page))
+          return decodeQr(await qrScreenshot(page, testId))
         } catch {
           return ''
         }
@@ -71,5 +71,37 @@ test.describe('the pairing QR', () => {
     const second = (await page.getByTestId('pair-code').innerText()).trim()
 
     await expectQrToDecodeTo(page, `${new URL(page.url()).origin}/?c=${second}`)
+  })
+
+  test('enlarges over a dimmed page, and the big one scans too', async ({ page }) => {
+    // The enlarged code is REGENERATED at the bigger size rather than scaled up
+    // with CSS, so it is a second rendering and has to be decoded as one. A
+    // blurred upscale would still look fine in a screenshot and fail a camera.
+    await page.goto('/')
+    const code = (await page.getByTestId('pair-code').innerText()).trim()
+
+    const small = await page.getByTestId('pair-qr').boundingBox()
+    await page.getByTestId('enlarge-qr').click()
+
+    const modal = page.getByTestId('qr-enlarged')
+    await expect(modal).toBeVisible()
+    const big = await page.getByTestId('pair-qr-enlarged').boundingBox()
+    expect(big!.width).toBeGreaterThan(small!.width * 2)
+
+    await expectQrToDecodeTo(page, `${new URL(page.url()).origin}/?c=${code}`, 'pair-qr-enlarged')
+
+    // A phone held against the screen must not dismiss it; the backdrop must.
+    await page.getByTestId('pair-qr-enlarged').click({ position: { x: 8, y: 8 } })
+    await expect(modal).toBeVisible()
+    await page.mouse.click(20, 400)
+    await expect(modal).toBeHidden()
+
+    // Escape, and the keyboard path in — the picture is aria-hidden, so the
+    // button is the only thing assistive tech or a keyboard can reach.
+    await page.getByTestId('enlarge-qr').focus()
+    await page.keyboard.press('Enter')
+    await expect(modal).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(modal).toBeHidden()
   })
 })

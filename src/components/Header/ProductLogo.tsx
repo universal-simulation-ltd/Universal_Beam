@@ -1,20 +1,40 @@
-// Universal Beam brand icon — icon-only by design. The SDK's
-// UniversalAppsNavBar renders the product name beside this slot (from the apps
-// catalogue), so putting a wordmark here would print the name twice.
+// GENERATED FILE — do not edit by hand.
+// Source: backoffice/universal-platform/scripts/app-marks/marks.mjs
+// Regenerate: node scripts/app-marks/build.mjs (from backoffice/universal-platform)
+// Mark: Universal Beam — Two devices and the beam between them.
+// Hover: The beam crosses from the near device to the far one.
 //
-// Two dots and a line: the whole product is a direct link between exactly two
-// points, which is what a data channel is.
+// Icon-only by design: the SDK's UniversalAppsNavBar renders the product name
+// from its catalogue beside this slot, so a wordmark here would print it twice.
+
+const CSS = `
+  /* Resting states */
+  .uam-beam-beam { transform: translateX(-6px); opacity: 0.35; transition: transform .5s cubic-bezier(0.16,1,0.3,1), opacity .4s ease; }
+
+  /* Active states */
+  .uam-host-beam:hover .uam-beam-beam,
+  .uam-host-beam:focus-visible .uam-beam-beam { transform: translateX(0); opacity: 1; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .uam-beam-beam { transition: none !important; }
+  }
+`
+
 export default function ProductLogo() {
   return (
     <span
-      className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-orange-600 text-white"
+      className="uam-host-beam inline-flex h-6 w-6 shrink-0 items-center justify-center"
       aria-hidden="true"
     >
-      <svg viewBox="0 0 16 16" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="3.2" cy="8" r="1.5" fill="currentColor" stroke="none" />
-        <circle cx="12.8" cy="8" r="1.5" fill="currentColor" stroke="none" />
-        <path d="M5.4 8h3.6" />
-        <path d="m8.4 6.2 1.8 1.8-1.8 1.8" />
+      <style>{CSS}</style>
+      <svg viewBox="0 0 64 64" className="h-6 w-6" aria-hidden="true">
+        <rect x="0" y="0" width="64" height="64" rx="14" fill="#0f172a" />
+        <rect x={6} y={16} width={15} height={32} rx={4} fill="#ff9a1f" />
+        <rect x={43} y={16} width={15} height={32} rx={4} fill="#ff9a1f" />
+        <g fill="none" strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" stroke="#fe8c01" className="uam-beam-beam">
+          <path d="M26 32h11" />
+          <path d="M33.5 27.5 38 32l-4.5 4.5" />
+        </g>
       </svg>
     </span>
   )
