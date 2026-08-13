@@ -16,8 +16,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@unisim/sdk": "^0.103.0",
-    "qr-code-styling": "^1.9.2",
+    "@unisim/sdk": "^0.105.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "zustand": "^5.0.2"

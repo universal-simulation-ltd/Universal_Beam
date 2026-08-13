@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 import { PNG } from 'pngjs'
 import { BinaryBitmap, HybridBinarizer, QRCodeReader, RGBLuminanceSource } from '@zxing/library'
 
@@ -11,6 +11,11 @@ import { BinaryBitmap, HybridBinarizer, QRCodeReader, RGBLuminanceSource } from 
 // renders them, and decodes them with zxing — a strict reader that rejects
 // inverted and low-contrast codes rather than guessing. If a restyle ever
 // breaks the scan, this fails before a user's phone camera does.
+//
+// Since 2026-08-13 the code and the enlarged view are the SDK's <UnisimQr> /
+// <QrLightbox> rather than Beam's own components, so this spec is now the
+// suite's decode check as well as Beam's — the SDK has no browser harness of
+// its own, and seven apps draw the thing it renders.
 
 /** Decode the (only) QR in a PNG screenshot, or throw. */
 function decodeQr(png: Buffer): string {
@@ -24,9 +29,16 @@ function decodeQr(png: Buffer): string {
   return new QRCodeReader().decode(bitmap).getText()
 }
 
-async function qrScreenshot(page: Page, testId = 'pair-qr'): Promise<Buffer> {
-  const qr = page.getByTestId(testId)
-  await expect(qr.locator('svg')).toBeVisible()
+/** The inline code on the pairing card. */
+const inlineQr = (page: Page) => page.getByTestId('pair-qr')
+/** The code inside the enlarged view. Addressed by role rather than a test id:
+ *  the lightbox belongs to the SDK now, and its accessible name is part of what
+ *  this spec is checking. */
+const enlargedQr = (page: Page) =>
+  page.getByRole('dialog').getByRole('img', { name: /QR code/i })
+
+async function qrScreenshot(qr: Locator): Promise<Buffer> {
+  await expect(qr.locator('canvas')).toBeVisible()
   // Screenshot the padded white card AROUND the code, not the code itself —
   // that padding is the quiet zone, and a decoder is entitled to it.
   return await qr.locator('..').screenshot()
@@ -35,12 +47,12 @@ async function qrScreenshot(page: Page, testId = 'pair-qr'): Promise<Buffer> {
 /** The QR redraws asynchronously (it waits on the centre image), so poll the
  *  decode instead of racing it. An undecodable frame reads as '' and the poll
  *  keeps trying; only a persistent failure or a wrong payload fails the test. */
-async function expectQrToDecodeTo(page: Page, expected: string, testId = 'pair-qr'): Promise<void> {
+async function expectQrToDecodeTo(qr: Locator, expected: string): Promise<void> {
   await expect
     .poll(
       async () => {
         try {
-          return decodeQr(await qrScreenshot(page, testId))
+          return decodeQr(await qrScreenshot(qr))
         } catch {
           return ''
         }
@@ -56,7 +68,7 @@ test.describe('the pairing QR', () => {
     const code = (await page.getByTestId('pair-code').innerText()).trim()
     expect(code).toMatch(/^[A-Z0-9]{6}$/)
 
-    await expectQrToDecodeTo(page, `${new URL(page.url()).origin}/?c=${code}`)
+    await expectQrToDecodeTo(inlineQr(page), `${new URL(page.url()).origin}/?c=${code}`)
   })
 
   test('still decodes after a new code replaces the old one', async ({ page }) => {
@@ -70,7 +82,7 @@ test.describe('the pairing QR', () => {
     await expect(page.getByTestId('pair-code')).not.toHaveText(first)
     const second = (await page.getByTestId('pair-code').innerText()).trim()
 
-    await expectQrToDecodeTo(page, `${new URL(page.url()).origin}/?c=${second}`)
+    await expectQrToDecodeTo(inlineQr(page), `${new URL(page.url()).origin}/?c=${second}`)
   })
 
   test('enlarges over a dimmed page, and the big one scans too', async ({ page }) => {
@@ -80,18 +92,18 @@ test.describe('the pairing QR', () => {
     await page.goto('/')
     const code = (await page.getByTestId('pair-code').innerText()).trim()
 
-    const small = await page.getByTestId('pair-qr').boundingBox()
+    const small = await inlineQr(page).boundingBox()
     await page.getByTestId('enlarge-qr').click()
 
-    const modal = page.getByTestId('qr-enlarged')
+    const modal = page.getByRole('dialog')
     await expect(modal).toBeVisible()
-    const big = await page.getByTestId('pair-qr-enlarged').boundingBox()
+    const big = await enlargedQr(page).boundingBox()
     expect(big!.width).toBeGreaterThan(small!.width * 2)
 
-    await expectQrToDecodeTo(page, `${new URL(page.url()).origin}/?c=${code}`, 'pair-qr-enlarged')
+    await expectQrToDecodeTo(enlargedQr(page), `${new URL(page.url()).origin}/?c=${code}`)
 
     // A phone held against the screen must not dismiss it; the backdrop must.
-    await page.getByTestId('pair-qr-enlarged').click({ position: { x: 8, y: 8 } })
+    await enlargedQr(page).click({ position: { x: 8, y: 8 } })
     await expect(modal).toBeVisible()
     await page.mouse.click(20, 400)
     await expect(modal).toBeHidden()

@@ -26,7 +26,16 @@ export default defineConfig(({ mode }) => {
       dedupe: ['react', 'react-dom']
     },
     optimizeDeps: {
-      exclude: ['@unisim/sdk']
+      exclude: ['@unisim/sdk'],
+      // ⚠️ REQUIRED, and only in dev. The SDK's <UnisimQr> reaches
+      // qr-code-styling through a dynamic import, and that package ships UMD
+      // only — no ESM build. Because @unisim/sdk is excluded above, Vite serves
+      // that dependency raw instead of pre-bundling it, and a UMD wrapper
+      // evaluated as an ES module dies on "Cannot set properties of undefined
+      // (setting 'QRCodeStyling')" — which the component catches, so all you
+      // see is "This code couldn't be drawn". Naming it here forces the CJS
+      // interop. `vite build` is unaffected; this bites in dev only.
+      include: ['qr-code-styling']
     },
     plugins: [
       react(),

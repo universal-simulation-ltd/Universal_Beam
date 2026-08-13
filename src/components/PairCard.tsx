@@ -3,8 +3,7 @@ import { joinUrl, useBeamStore } from '../stores/beamStore'
 import { WAITING_NUDGE_MS } from '../lib/rtc'
 import { isValidCode, normaliseCode } from '../lib/code'
 import { writeClipboard } from '../lib/clipboard'
-import BrandedQr from './BrandedQr'
-import EnlargeQrModal from './EnlargeQrModal'
+import { QrLightbox, UnisimQr } from '@unisim/sdk'
 import StatusPill from './StatusPill'
 
 // The pairing half of the app: this device's code and QR on the left, "I have a
@@ -66,7 +65,11 @@ export default function PairCard() {
               aria-label="Enlarge the QR code"
               className="group rounded-xl bg-white p-3 ring-1 ring-slate-200 transition hover:ring-orange-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 dark:ring-slate-700 dark:hover:ring-orange-400"
             >
-              <BrandedQr value={link} />
+              {/* The SDK code carries its own click-to-enlarge, but this card
+                  wraps it in a button of its own for the ring and the caption —
+                  and a button inside a button is not markup. So the code is
+                  inert here and the lightbox is opened from the outside. */}
+              <UnisimQr value={link} size={160} enlargeable={false} data-testid="pair-qr" />
               <span className="mt-2 block text-center text-[11px] font-medium text-slate-500 transition group-hover:text-orange-700 dark:text-slate-400">
                 Tap to enlarge
               </span>
@@ -79,7 +82,15 @@ export default function PairCard() {
             />
           </div>
         )}
-        {enlarged && link && <EnlargeQrModal value={link} onClose={() => setEnlarged(false)} />}
+        {enlarged && link && (
+          <QrLightbox
+            value={link}
+            label="the pairing link"
+            title="Point the other device's camera at this code"
+            hint="It opens Beam already joined to this session. Struggling? Turn your screen brightness up, and pull the camera back a little so the whole code is in frame."
+            onClose={() => setEnlarged(false)}
+          />
+        )}
 
         <WaitingNudge />
 
