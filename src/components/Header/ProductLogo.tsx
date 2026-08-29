@@ -28,10 +28,16 @@ export default function ProductLogo() {
     >
       <style>{CSS}</style>
       <svg viewBox="0 0 64 64" className="h-6 w-6" aria-hidden="true">
-        <rect x="0" y="0" width="64" height="64" rx="14" fill="#0f172a" />
-        <rect x={6} y={16} width={15} height={32} rx={4} fill="#ff9a1f" />
-        <rect x={43} y={16} width={15} height={32} rx={4} fill="#ff9a1f" />
-        <g fill="none" strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" stroke="#fe8c01" className="uam-beam-beam">
+        <defs>
+          <linearGradient id="uam-nav-beam-tile" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor="#fe8c01" />
+            <stop offset="1" stopColor="#e05504" />
+          </linearGradient>
+        </defs>
+        <rect width="64" height="64" rx="14" fill="url(#uam-nav-beam-tile)" />
+        <rect x={6} y={16} width={15} height={32} rx={4} fill="#fed7aa" />
+        <rect x={43} y={16} width={15} height={32} rx={4} fill="#fed7aa" />
+        <g fill="none" strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" stroke="#ffffff" className="uam-beam-beam">
           <path d="M26 32h11" />
           <path d="M33.5 27.5 38 32l-4.5 4.5" />
         </g>
