@@ -1,3 +1,4 @@
+import { AdvancedMenu } from '@unisim/sdk'
 import { useBeamStore } from '../../stores/beamStore'
 import { useThemeStore, type ThemePref } from '../../stores/themeStore'
 
@@ -47,6 +48,20 @@ export default function AppMenu() {
           onClick={() => setPref(t.pref)}
         />
       ))}
+
+      {/* Advanced — the SDK's own category, so every app in the suite has one in
+          the same place, and whatever goes in it next is one change rather than
+          nineteen. "About this app" is always its last row. */}
+      <AdvancedMenu
+        about={{
+          repo:    'https://github.com/universal-simulation-ltd/Universal_Beam',
+          subject: 'Your files',
+          plural:  true,
+          except:  'beaming them to a device you paired with',
+          headline: 'Other transfer services keep a copy of your file on their servers.',
+          version: __APP_VERSION__,
+        }}
+      />
     </>
   )
 }
