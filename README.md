@@ -135,4 +135,4 @@ both devices, and two "guests" would otherwise wait for each other forever.
 
 ## Licence
 
-MIT — see [LICENSE](LICENSE).
+[AGPL-3.0-or-later](LICENSE), with an added permission for app-store distribution.

@@ -3,7 +3,7 @@
   "version": "0.2.0",
   "private": true,
   "type": "module",
-  "license": "MIT",
+  "license": "AGPL-3.0-or-later",
   "description": "Universal Beam — send text and files straight from one device to another. Peer-to-peer, end-to-end encrypted, never stored on a server.",
   "scripts": {
     "dev": "vite",
