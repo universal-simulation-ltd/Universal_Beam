@@ -1,4 +1,9 @@
 import { AdvancedMenu } from '@unisim/sdk'
+// Generated — `npm run credits` after any dependency change. Never edit it by
+// hand: it is read off the installed tree, so a hand-kept list drifts from the
+// lockfile the first time anyone upgrades anything, and a credits list naming a
+// package we removed is worse than no list at all.
+import credits from '../../generated/credits.json'
 import { useBeamStore } from '../../stores/beamStore'
 import { useThemeStore, type ThemePref } from '../../stores/themeStore'
 
@@ -60,6 +65,8 @@ export default function AppMenu() {
           except:  'beaming them to a device you paired with',
           headline: 'Other transfer services keep a copy of your file on their servers.',
           version: __APP_VERSION__,
+          credits,
+          noticesHref: 'https://github.com/universal-simulation-ltd/Universal_Beam/blob/main/THIRD-PARTY-NOTICES.md',
         }}
       />
     </>

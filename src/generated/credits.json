@@ -1,0 +1,210 @@
+{
+  "app": "universal-beam",
+  "appVersion": "0.2.0",
+  "generated": "2026-09-08",
+  "noticesCount": 9,
+  "ships": [
+    {
+      "name": "react",
+      "title": "React",
+      "version": "18.3.1",
+      "licence": "MIT",
+      "repo": "https://github.com/facebook/react",
+      "homepage": "https://reactjs.org/",
+      "description": "the UI library every Universal App is built from",
+      "authors": [
+        "Jordan Walke"
+      ],
+      "source": "node_modules"
+    },
+    {
+      "name": "react-dom",
+      "title": "React DOM",
+      "version": "18.3.1",
+      "licence": "MIT",
+      "repo": "https://github.com/facebook/react",
+      "homepage": "https://reactjs.org/",
+      "description": "renders React to the browser DOM",
+      "authors": [
+        "Jordan Walke"
+      ],
+      "source": "node_modules"
+    },
+    {
+      "name": "zustand",
+      "title": "Zustand",
+      "version": "5.0.14",
+      "licence": "MIT",
+      "repo": "https://github.com/pmndrs/zustand",
+      "homepage": "https://github.com/pmndrs/zustand",
+      "description": "holds the editor's state",
+      "authors": [
+        "Paul Henschel"
+      ],
+      "source": "node_modules"
+    }
+  ],
+  "builds": [
+    {
+      "name": "@eslint/js",
+      "version": "9.39.5",
+      "licence": "MIT",
+      "repo": "https://github.com/eslint/eslint",
+      "homepage": "https://eslint.org",
+      "authors": [],
+      "source": "node_modules"
+    },
+    {
+      "name": "@playwright/test",
+      "version": "1.62.1",
+      "licence": "Apache-2.0",
+      "repo": "https://github.com/microsoft/playwright",
+      "homepage": "https://playwright.dev",
+      "authors": [
+        "Microsoft Corporation"
+      ],
+      "source": "node_modules"
+    },
+    {
+      "name": "@types/*",
+      "title": "DefinitelyTyped",
+      "licence": "MIT",
+      "repo": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "description": "the community type definitions TypeScript builds against",
+      "authors": [
+        "Boris Yankov"
+      ],
+      "source": "overlay"
+    },
+    {
+      "name": "@zxing/library",
+      "version": "0.23.0",
+      "licence": "Apache-2.0",
+      "repo": "https://github.com/zxing-js/library",
+      "homepage": "https://zxing-js.github.io/library/",
+      "authors": [],
+      "source": "node_modules"
+    },
+    {
+      "name": "eslint",
+      "version": "9.39.5",
+      "licence": "MIT",
+      "repo": "https://github.com/eslint/eslint",
+      "homepage": "https://eslint.org",
+      "authors": [
+        "Nicholas C. Zakas"
+      ],
+      "source": "node_modules"
+    },
+    {
+      "name": "eslint-plugin-react-hooks",
+      "version": "5.2.0",
+      "licence": "MIT",
+      "repo": "https://github.com/facebook/react",
+      "homepage": "https://react.dev/",
+      "authors": [],
+      "source": "node_modules"
+    },
+    {
+      "name": "eslint-plugin-react-refresh",
+      "version": "0.4.26",
+      "licence": "MIT",
+      "authors": [
+        "Arnaud Barré"
+      ],
+      "source": "node_modules"
+    },
+    {
+      "name": "globals",
+      "version": "15.15.0",
+      "licence": "MIT",
+      "repo": "https://github.com/sindresorhus/globals",
+      "authors": [
+        "Sindre Sorhus"
+      ],
+      "source": "node_modules"
+    },
+    {
+      "name": "pngjs",
+      "version": "7.0.0",
+      "licence": "MIT",
+      "repo": "https://github.com/pngjs/pngjs",
+      "homepage": "https://github.com/lukeapage/pngjs",
+      "authors": [
+        "Alexandre Paré",
+        "Gaurav Mali"
+      ],
+      "source": "node_modules"
+    },
+    {
+      "name": "tailwindcss",
+      "title": "Tailwind CSS",
+      "version": "4.3.3",
+      "licence": "MIT",
+      "repo": "https://github.com/tailwindlabs/tailwindcss",
+      "homepage": "https://tailwindcss.com",
+      "description": "the CSS framework the interfaces are styled with",
+      "authors": [
+        "Adam Wathan"
+      ],
+      "source": "node_modules"
+    },
+    {
+      "name": "typescript",
+      "title": "TypeScript",
+      "version": "5.9.3",
+      "licence": "Apache-2.0",
+      "repo": "https://github.com/microsoft/TypeScript",
+      "homepage": "https://www.typescriptlang.org/",
+      "authors": [
+        "Microsoft"
+      ],
+      "source": "node_modules"
+    },
+    {
+      "name": "typescript-eslint",
+      "version": "8.66.0",
+      "licence": "MIT",
+      "repo": "https://github.com/typescript-eslint/typescript-eslint",
+      "homepage": "https://typescript-eslint.io/packages/typescript-eslint",
+      "authors": [],
+      "source": "node_modules"
+    },
+    {
+      "name": "vite",
+      "title": "Vite",
+      "version": "6.4.3",
+      "licence": "MIT",
+      "repo": "https://github.com/vitejs/vite",
+      "homepage": "https://vite.dev",
+      "description": "the build tool and dev server behind every web app in the suite",
+      "authors": [
+        "Evan You"
+      ],
+      "source": "node_modules"
+    },
+    {
+      "name": "vite-plugin-pwa",
+      "title": "vite-plugin-pwa",
+      "version": "0.21.2",
+      "licence": "MIT",
+      "repo": "https://github.com/vite-pwa/vite-plugin-pwa",
+      "homepage": "https://github.com/vite-pwa/vite-plugin-pwa#readme",
+      "authors": [
+        "Anthony Fu"
+      ],
+      "source": "node_modules"
+    },
+    {
+      "name": "vitest",
+      "version": "2.1.9",
+      "licence": "MIT",
+      "repo": "https://github.com/vitest-dev/vitest",
+      "homepage": "https://github.com/vitest-dev/vitest#readme",
+      "authors": [
+        "Anthony Fu"
+      ],
+      "source": "node_modules"
+    }
+  ]
+}
