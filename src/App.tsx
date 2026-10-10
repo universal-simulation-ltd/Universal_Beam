@@ -12,6 +12,10 @@ import FailureCard from './components/FailureCard'
 import Honesty from './components/Honesty'
 import UpdateBanner from './components/UpdateBanner'
 import { initFromUrl, useBeamStore } from './stores/beamStore'
+// Beam DOES have a dark mode (class-driven `dark:` styles, see index.css). Not
+// passing the store made Tune this app say "Universal Beam is always light"
+// while the Actions menu offered Light / Dark / Match my device.
+import { useThemeStore } from './stores/themeStore'
 
 // The single page container. The navbar (via the SDK's `contentClassName`), the
 // page body and the footer all share it, so the suite switcher lines up with
@@ -49,6 +53,7 @@ export default function App() {
         productHomeHref={import.meta.env.BASE_URL}
         actions={<AppMenu />}
         actionsLabel="Beam"
+        themeStore={useThemeStore}
         suiteSwitcherIconSrc={`${import.meta.env.BASE_URL}unisim-icon.png`}
       />
 
