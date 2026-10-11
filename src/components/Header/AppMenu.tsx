@@ -5,7 +5,6 @@ import { AdvancedMenu } from '@unisim/sdk'
 // package we removed is worse than no list at all.
 import credits from '../../generated/credits.json'
 import { useBeamStore } from '../../stores/beamStore'
-import { useThemeStore, type ThemePref } from '../../stores/themeStore'
 
 // The per-app rows that slot into <UniversalAppsNavBar />'s `actions` prop —
 // ROWS ONLY, no trigger and no panel of its own. The SDK renders them inside
@@ -15,23 +14,19 @@ import { useThemeStore, type ThemePref } from '../../stores/themeStore'
 // Styling is inline rather than Tailwind to match the SDK dropdown's own rows
 // (the same 8px/14px rhythm and 13px label the profile and language rows use) —
 // these render inside SDK chrome, not ours.
+//
+// No Appearance rows (Light / Dark / Match my device) here: the colour scheme
+// lives only in Tune this app, whose Colour scheme row is bound to this app's
+// theme store (App.tsx passes `themeStore` to the navbar). Don't add them back
+// — two controls for one setting, as Universal Compress found.
 
 const TINT = { bg: '#fff7ed', fg: '#c2410c' }
 const REST_COLOR = '#374151'
-
-const THEMES: { pref: ThemePref; label: string; glyph: string }[] = [
-  { pref: 'light', label: 'Light', glyph: '☀️' },
-  { pref: 'dark', label: 'Dark', glyph: '🌙' },
-  // 'system' is offered but is deliberately NOT the default — see themeStore.
-  { pref: 'system', label: 'Match my device', glyph: '🖥️' },
-]
 
 export default function AppMenu() {
   const newCode = useBeamStore((s) => s.newCode)
   const clearMessages = useBeamStore((s) => s.clearMessages)
   const messageCount = useBeamStore((s) => s.messages.length)
-  const pref = useThemeStore((s) => s.pref)
-  const setPref = useThemeStore((s) => s.setPref)
 
   return (
     <>
@@ -43,23 +38,6 @@ export default function AppMenu() {
         onClick={clearMessages}
         disabled={messageCount === 0}
       />
-      {/* The same store as the Colour scheme row in Tune this app (App.tsx
-          passes `themeStore` to the navbar), so the two always agree. */}
-      <MenuLabel>Appearance</MenuLabel>
-      {THEMES.map((t) => (
-        <MenuRow
-          key={t.pref}
-          glyph={t.glyph}
-          label={t.label}
-          selected={pref === t.pref}
-          onClick={() => setPref(t.pref)}
-          // ⚠️ Since SDK 0.183 a menu row closes the menu by default. A theme
-          // row's whole effect is the ✓ moving and the page re-colouring
-          // behind the menu, so it stays open to show both.
-          keepMenuOpen
-        />
-      ))}
-
       {/* Advanced — the SDK's own category, so every app in the suite has one in
           the same place, and whatever goes in it next is one change rather than
           nineteen. "About this app" is always its last row. */}
@@ -100,22 +78,17 @@ function MenuRow({
   glyph,
   label,
   onClick,
-  selected = false,
   disabled = false,
-  keepMenuOpen = false,
 }: {
   glyph: string
   label: string
   onClick: () => void
-  selected?: boolean
   disabled?: boolean
-  keepMenuOpen?: boolean
 }) {
   return (
     <button
       type="button"
       role="menuitem"
-      data-keep-menu-open={keepMenuOpen ? '' : undefined}
       onClick={onClick}
       disabled={disabled}
       style={{
@@ -128,8 +101,8 @@ function MenuRow({
         fontFamily: 'inherit',
         textAlign: 'left',
         border: 0,
-        background: selected ? TINT.bg : 'transparent',
-        color: disabled ? '#9ca3af' : selected ? TINT.fg : REST_COLOR,
+        background: 'transparent',
+        color: disabled ? '#9ca3af' : REST_COLOR,
         cursor: disabled ? 'default' : 'pointer',
         opacity: disabled ? 0.6 : 1,
         transition: 'background 120ms, color 120ms',
@@ -141,13 +114,12 @@ function MenuRow({
       }}
       onMouseLeave={(e) => {
         if (disabled) return
-        e.currentTarget.style.background = selected ? TINT.bg : 'transparent'
-        e.currentTarget.style.color = selected ? TINT.fg : REST_COLOR
+        e.currentTarget.style.background = 'transparent'
+        e.currentTarget.style.color = REST_COLOR
       }}
     >
       <span aria-hidden>{glyph}</span>
       <span style={{ flex: 1, minWidth: 0, fontWeight: 500, lineHeight: 1.3 }}>{label}</span>
-      {selected && <span aria-hidden style={{ color: TINT.fg }}>✓</span>}
     </button>
   )
 }

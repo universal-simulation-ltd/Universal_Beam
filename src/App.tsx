@@ -12,9 +12,9 @@ import FailureCard from './components/FailureCard'
 import Honesty from './components/Honesty'
 import UpdateBanner from './components/UpdateBanner'
 import { initFromUrl, useBeamStore } from './stores/beamStore'
-// Beam DOES have a dark mode (class-driven `dark:` styles, see index.css). Not
-// passing the store made Tune this app say "Universal Beam is always light"
-// while the Actions menu offered Light / Dark / Match my device.
+// Beam DOES have a dark mode (class-driven `dark:` styles, see index.css). Tune
+// this app's Colour scheme row is the only place to choose it, bound to this
+// store; without it Tune this app said "Universal Beam is always light".
 import { useThemeStore } from './stores/themeStore'
 
 // The single page container. The navbar (via the SDK's `contentClassName`), the
