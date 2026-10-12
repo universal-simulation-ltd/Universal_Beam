@@ -50,7 +50,7 @@ const ITEMS: { title: string; body: string }[] = [
   {
     title: 'What our servers do see',
     body:
-      'While two devices pair, the rendezvous service sees each one\'s internet address, as any website does, and so does the other device once they connect directly. Beam also counts its users: your browser keeps a random number, not linked to you or to any account, and sends it with the kind of device (web, phone or computer) every 45 seconds while Beam is open and on screen. That is the whole of it — never your code, your text, your files or their names.',
+      'While two devices pair, the rendezvous service sees each one\'s internet address, as any website does, and so does the other device once they connect directly. That is the whole of it: Beam keeps no count of its users, and never sends your code, your text, your files or their names.',
   },
   {
     title: 'It cannot mirror your clipboard',
