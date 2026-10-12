@@ -153,8 +153,10 @@ Run `npm run test:e2e` to repeat any of it.
   — pairing always needs the network.
 - **No accounts (2026-10-12).** `noAccounts: true`, and `UsageTracker` was
   removed (privacy audit), so Beam writes no `usage_events`. The SDK user count
-  (`presence`, a random install id every 45 s) is the only Supabase traffic,
-  and the Honesty panel says so.
+  (`presence`, a random install id every 45 s) was retired in `@unisim/sdk`
+  0.187.0, and `noAccounts` keeps its replacement, the anonymous daily open
+  count, off, so Beam sends no usage figure at all ("Beam keeps no count of its
+  users" in the Honesty panel).
 
 ## 2. The honest expected failure rate
 
