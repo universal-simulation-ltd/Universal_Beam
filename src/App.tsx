@@ -1,9 +1,5 @@
 import { useEffect } from 'react'
 import { UniversalAppsNavBar } from '@unisim/sdk'
-// <UsageTracker /> sends one "session.opened" row for a signed-in visitor. No
-// event may carry a code, a message, a length or a peer: this app's whole claim
-// is that we never see the payload.
-import { UsageTracker } from '@unisim/sdk'
 import AppMenu from './components/Header/AppMenu'
 import ProductLogo from './components/Header/ProductLogo'
 import PairCard from './components/PairCard'
@@ -56,8 +52,6 @@ export default function App() {
         themeStore={useThemeStore}
         suiteSwitcherIconSrc={`${import.meta.env.BASE_URL}unisim-icon.png`}
       />
-
-      <UsageTracker />
 
       <main className={`${CONTAINER} flex-1 py-8`}>
         <header className="mb-8">

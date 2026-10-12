@@ -45,7 +45,12 @@ const ITEMS: { title: string; body: string }[] = [
   {
     title: 'Nothing is remembered',
     body:
-      'No account, no history, no sync, no "send to a device that is switched off". What is on screen lives in these two tabs; closing one is the delete button. Reopening Beam starts an empty session with a new code.',
+      'No account, no history, no sync, no "send to a device that is switched off". Nothing you send is stored anywhere. What is on screen lives in these two tabs; closing one is the delete button. Reopening Beam starts an empty session with a new code.',
+  },
+  {
+    title: 'What our servers do see',
+    body:
+      'While two devices pair, the rendezvous service sees each one\'s internet address, as any website does, and so does the other device once they connect directly. Beam also counts its users: your browser keeps a random number, not linked to you or to any account, and sends it with the kind of device (web, phone or computer) every 45 seconds while Beam is open and on screen. That is the whole of it — never your code, your text, your files or their names.',
   },
   {
     title: 'It cannot mirror your clipboard',

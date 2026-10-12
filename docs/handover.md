@@ -151,9 +151,10 @@ Run `npm run test:e2e` to repeat any of it.
 - **PWA / offline shell.** The service worker builds; installation was not
   tested. Note the shell going offline does not make the *product* work offline
   — pairing always needs the network.
-- **Signed-in behaviour.** `UsageTracker` is mounted with `product: 'beam'`, but
-  every live run was anonymous, so no `usage_events` row has actually been
-  inserted. See §4.
+- **No accounts (2026-10-12).** `noAccounts: true`, and `UsageTracker` was
+  removed (privacy audit), so Beam writes no `usage_events`. The SDK user count
+  (`presence`, a random install id every 45 s) is the only Supabase traffic,
+  and the Honesty panel says so.
 
 ## 2. The honest expected failure rate
 
