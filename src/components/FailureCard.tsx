@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { useBeamStore } from '../stores/beamStore'
 import { writeClipboard } from '../lib/clipboard'
 
@@ -20,6 +20,7 @@ export default function FailureCard() {
   const newCode = useBeamStore((s) => s.newCode)
   const [showTechnical, setShowTechnical] = useState(false)
   const [copied, setCopied] = useState(false)
+  const technicalId = useId()
 
   if (!failure) return null
 
@@ -74,12 +75,14 @@ export default function FailureCard() {
         <button
           type="button"
           onClick={() => setShowTechnical((v) => !v)}
+          aria-expanded={showTechnical}
+          aria-controls={technicalId}
           className="text-xs font-medium text-rose-800/80 underline-offset-2 hover:underline dark:text-rose-200/80"
         >
           {showTechnical ? 'Hide technical details' : 'Technical details'}
         </button>
         {showTechnical && (
-          <div className="mt-2">
+          <div id={technicalId} className="mt-2">
             <code className="block overflow-x-auto rounded-md bg-white/70 px-3 py-2 font-mono text-[11px] leading-relaxed text-rose-900 dark:bg-black/30 dark:text-rose-100">
               {failure.technical}
             </code>
