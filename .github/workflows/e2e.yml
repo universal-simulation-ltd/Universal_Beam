@@ -1,0 +1,72 @@
+# The Playwright specs in `e2e/*.e2e.ts`, on every push and pull request:
+# `npx playwright test` starts the Vite dev server on :5197 itself (see
+# playwright.config.ts) and pairs two real browser contexts through the real
+# rendezvous (opensource.unisim.co.uk/rtc/room), so these need the internet,
+# which a GitHub runner has. Chromium only.
+#
+# @playwright/test is a devDependency, locked at the version below.
+#
+# The jobs run in Playwright's own image for the version below, which already
+# holds the browsers AND their system libraries: installing the libraries with
+# `playwright install-deps` on a bare runner took 9 to 38 minutes of apt per
+# job (Universal PDF, measured 2026-10-22), where pulling the image takes about
+# one. The image is the browser cache. Keep its tag and PLAYWRIGHT_VERSION the
+# same as each other, and as the Playwright version npm installs.
+#
+# Free: the repo is public, so ubuntu-latest minutes cost nothing.
+
+name: e2e
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+# A newer push to a branch or PR cancels the older run, but not on main: main
+# moves often (several sessions push to it), and every commit there should
+# get its own result.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref == 'refs/heads/main' && github.sha || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+env:
+  PLAYWRIGHT_VERSION: '1.62.1'
+
+jobs:
+  e2e:
+    name: e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.1-noble
+      # --ipc=host: Chromium runs out of shared memory in a container
+      # without it. --user 1001: the runner's own user (Playwright's advice),
+      # so the checkout is writable and Firefox is not started as root.
+      options: --ipc=host --user 1001
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Playwright specs
+        run: npx playwright test
+
+      - name: Keep the traces of a failed run
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: test-results/
+          retention-days: 14
