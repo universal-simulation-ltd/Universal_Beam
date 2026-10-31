@@ -14,8 +14,11 @@ import './index.css'
 // still mount <UniversalProvider> so the shared navbar works.
 //
 // No accounts (privacy audit 2026-10-12): `noAccounts: true` drops the
-// profile icon and sign-in from the navbar, and <UsageTracker /> is gone, so
-// there are no per-account usage events. The SDK's user count was retired in
+// profile icon and account rows from the navbar, and <UsageTracker /> is gone,
+// so there are no per-account usage events. Since SDK 0.211.0 it no longer
+// keeps people signed out: a suite session the browser already holds is read
+// and followed (their Global Tuning comes with them), and Tune this app offers
+// a discreet Sign in. The SDK's user count was retired in
 // 0.187.0, and `noAccounts` also keeps its anonymous daily open count off, so
 // nothing about Beam's visitors goes to Supabase. Said on the Honesty panel —
 // change both together.
