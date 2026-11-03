@@ -28,6 +28,9 @@ const REPO_URL = 'https://github.com/universal-simulation-ltd/Universal_Beam'
 
 export default function App() {
   const phase = useBeamStore((s) => s.phase)
+  // The RESOLVED theme: the bar and its dropdowns are inline-styled, so
+  // without it they stay light in a dark app.
+  const theme = useThemeStore((s) => s.effective)
 
   // Mint a code (or pick one up from ?c=) and open the rendezvous room on first
   // paint, so the QR on screen is live before anyone presses anything.
@@ -49,6 +52,7 @@ export default function App() {
         productHomeHref={import.meta.env.BASE_URL}
         actions={<AppMenu />}
         actionsLabel="Beam"
+        theme={theme}
         themeStore={useThemeStore}
         suiteSwitcherIconSrc={`${import.meta.env.BASE_URL}unisim-icon.png`}
       />
