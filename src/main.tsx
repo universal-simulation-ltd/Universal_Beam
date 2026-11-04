@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { UniversalProvider } from '@unisim/sdk'
+import { UniversalProvider, installButtonStyles } from '@unisim/sdk'
 import App from './App'
 import './index.css'
 
@@ -66,6 +66,10 @@ const universalConfig = {
   noAccounts: true,
   cookieDomain: import.meta.env.PROD ? '.unisim.co.uk' : undefined,
 }
+
+// The suite's key buttons (SDK 0.216, BRANDING.md → Buttons), used as
+// `u-btn` class strings. Beam has no tab trays, so no installTabStyles().
+installButtonStyles()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

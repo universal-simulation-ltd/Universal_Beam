@@ -146,7 +146,7 @@ export default function Room() {
           type="button"
           onClick={disconnect}
           data-testid="disconnect"
-          className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+          className="u-btn u-btn--sm"
         >
           {live ? 'Disconnect' : 'Start over'}
         </button>
@@ -220,8 +220,13 @@ function Composer({
           onClick={submit}
           disabled={disabled || !draft.trim()}
           data-testid="send"
-          className="rounded-lg bg-orange-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-800 disabled:cursor-not-allowed disabled:bg-slate-300 dark:disabled:bg-slate-700"
+          className="u-btn u-btn--primary"
         >
+          <span className="u-btn__key" aria-hidden>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 2 11 13M22 2l-7 20-4-9-9-4z" />
+            </svg>
+          </span>
           Send
         </button>
         <input {...picker.inputProps} className="hidden" data-testid="file-input" />
@@ -231,7 +236,7 @@ function Composer({
           disabled={noFiles}
           title={filesDisabled ? 'The other device is on an older version of Beam and cannot receive files' : undefined}
           data-testid="send-file"
-          className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+          className="u-btn"
         >
           Send a file
         </button>
@@ -241,7 +246,7 @@ function Composer({
             onClick={() => { void paste() }}
             disabled={disabled}
             data-testid="paste"
-            className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+            className="u-btn"
           >
             Paste from clipboard
           </button>
@@ -295,7 +300,7 @@ function MessageRow({ body, dir, at }: { body: string; dir: 'in' | 'out'; at: nu
         <button
           type="button"
           onClick={() => { void writeClipboard(body).then(setCopied) }}
-          className="rounded-md border border-slate-200 px-2 py-1 text-xs font-medium text-slate-600 transition hover:bg-white dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+          className="u-btn u-btn--sm"
         >
           {copied ? 'Copied' : 'Copy'}
         </button>
@@ -304,7 +309,7 @@ function MessageRow({ body, dir, at }: { body: string; dir: 'in' | 'out'; at: nu
             href={link}
             target="_blank"
             rel="noreferrer noopener"
-            className="rounded-md border border-slate-200 px-2 py-1 text-xs font-medium text-slate-600 transition hover:bg-white dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+            className="u-btn u-btn--sm"
           >
             Open link
           </a>
@@ -395,7 +400,7 @@ function TransferRow({ t }: { t: BeamTransfer }) {
               type="button"
               onClick={() => { void acceptTransfer(t.id) }}
               data-testid="accept-file"
-              className="rounded-md bg-orange-700 px-3 py-1 text-xs font-semibold text-white transition hover:bg-orange-800"
+              className="u-btn u-btn--soft u-btn--sm"
             >
               {supportsStreamingSave() ? 'Save…' : 'Accept'}
             </button>
@@ -403,7 +408,7 @@ function TransferRow({ t }: { t: BeamTransfer }) {
               type="button"
               onClick={() => declineTransfer(t.id)}
               data-testid="decline-file"
-              className="rounded-md border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 transition hover:bg-white dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+              className="u-btn u-btn--sm"
             >
               Decline
             </button>
@@ -414,7 +419,7 @@ function TransferRow({ t }: { t: BeamTransfer }) {
             type="button"
             onClick={() => cancelTransfer(t.id)}
             data-testid="cancel-file"
-            className="rounded-md border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 transition hover:bg-white dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+            className="u-btn u-btn--sm"
           >
             Cancel
           </button>

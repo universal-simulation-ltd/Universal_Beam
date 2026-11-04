@@ -98,7 +98,7 @@ export default function PairCard() {
           type="button"
           onClick={newCode}
           data-testid="new-code"
-          className="mt-5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+          className="u-btn mt-5 w-full"
         >
           Start a new code
         </button>
@@ -184,7 +184,7 @@ function JoinForm({ onJoin, busy }: { onJoin: (code: string) => void; busy: bool
         type="submit"
         disabled={!ready || busy}
         data-testid="join-submit"
-        className="rounded-lg bg-orange-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-800 disabled:cursor-not-allowed disabled:bg-slate-300 dark:disabled:bg-slate-700"
+        className="u-btn u-btn--primary"
       >
         Connect
       </button>
@@ -241,7 +241,7 @@ function CopyButton({
       type="button"
       data-testid={testId}
       onClick={() => { void writeClipboard(text).then(setCopied) }}
-      className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+      className="u-btn u-btn--sm"
     >
       {copied ? done : idle}
     </button>
