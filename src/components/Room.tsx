@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useFileDrop } from '@unisim/sdk'
+import { GrowingTextarea, useFileDrop } from '@unisim/sdk'
 import { useBeamStore } from '../stores/beamStore'
 import { asSingleLink, canReadClipboard, readClipboard, writeClipboard } from '../lib/clipboard'
 import { formatBytes, type BeamTransfer } from '../lib/files'
@@ -196,8 +196,8 @@ function Composer({
 
   return (
     <div className="mt-5">
-      <textarea
-        ref={ref}
+      <GrowingTextarea
+        textareaRef={ref}
         value={draft}
         disabled={disabled}
         onChange={(e) => setDraft(e.target.value)}
