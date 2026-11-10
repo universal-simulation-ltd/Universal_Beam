@@ -46,6 +46,9 @@ export default function App() {
   return (
     <div className="flex min-h-screen flex-col bg-slate-100 dark:bg-slate-950">
       <UniversalAppsNavBar
+        // Signed in, the bar says whose it is: "Bradley’s Beam" ("James’ Beam",
+        // "My Beam" with no name), and Tune this app gets the account area (James, 2026-11-10 rollout).
+        personalTitle={(name) => (name ? `${/s$/i.test(name.trim()) ? `${name}’` : `${name}’s`} Beam` : 'My Beam')}
         contentClassName={CONTAINER}
         product="beam"
         productLogo={<ProductLogo />}
