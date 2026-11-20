@@ -113,17 +113,19 @@ export default function Room() {
       <section
         data-testid="messages"
         aria-live="polite"
-        className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 dark:border-slate-700 dark:bg-slate-900"
+        // The record of what crossed: the suite's Key box (BRANDING.md →
+        // Boxes, C), the tab its heading.
+        className="u-box u-box--key border-slate-200 bg-white px-4 pb-4 pt-7 sm:px-6 sm:pb-6 dark:border-slate-700 dark:bg-slate-900"
       >
-        <div className="flex items-baseline justify-between gap-3">
-          <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">This session</h2>
-          <span className="text-xs text-slate-500 dark:text-slate-400">
-            Kept in this tab only — never uploaded, never saved
-          </span>
-        </div>
+        <h2 className="u-box__key">This session</h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          Kept in this tab only — never uploaded, never saved
+        </p>
 
         {timeline.length === 0 ? (
-          <p className="mt-4 rounded-lg bg-slate-50 px-4 py-6 text-center text-sm text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+          // Nothing in frame yet: an empty Viewfinder (BRANDING.md → Boxes,
+          // D · empty), all four corners muted and no outline.
+          <p className="u-box u-box--frame u-box--empty mt-4 px-4 py-6 text-sm text-slate-500 dark:text-slate-400">
             Nothing sent yet. Type or paste above — or send a file — and it
             appears on the other device straight away.
           </p>

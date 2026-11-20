@@ -31,7 +31,11 @@ export default function PairCard() {
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
+      {/* The code is the value this card carries: the suite's Key box
+          (BRANDING.md → Boxes, C), its tab naming it. The status stays on
+          the pill and in its words. */}
+      <section className="u-box u-box--key border-slate-200 bg-white px-6 pb-6 pt-7 dark:border-slate-700 dark:bg-slate-900">
+        <span className="u-box__key">Pairing code</span>
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
@@ -63,13 +67,20 @@ export default function PairCard() {
               onClick={() => setEnlarged(true)}
               data-testid="enlarge-qr"
               aria-label="Enlarge the QR code"
-              className="group rounded-xl bg-white p-3 ring-1 ring-slate-200 transition hover:ring-orange-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 dark:ring-slate-700 dark:hover:ring-orange-400"
+              // The square is there to be framed by the other device's
+              // camera: the suite's Viewfinder (BRANDING.md → Boxes, D), its
+              // leading corner lit because the code is in frame. The frame
+              // itself is clear, so its brackets show on either ground; the
+              // code keeps a white plate of its own, which scanning needs.
+              className="group u-box u-box--frame w-auto bg-transparent p-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
             >
               {/* The SDK code carries its own click-to-enlarge, but this card
                   wraps it in a button of its own for the ring and the caption —
                   and a button inside a button is not markup. So the code is
                   inert here and the lightbox is opened from the outside. */}
-              <UnisimQr value={link} size={160} enlargeable={false} data-testid="pair-qr" />
+              <span className="block rounded-md bg-white p-2">
+                <UnisimQr value={link} size={160} enlargeable={false} data-testid="pair-qr" />
+              </span>
               <span className="mt-2 block text-center text-[11px] font-medium text-slate-500 transition group-hover:text-orange-700 dark:text-slate-400">
                 Tap to enlarge
               </span>
